@@ -29,6 +29,8 @@
 #include <reg.h>
 #include <arch/arm64.h>
 
+__BEGIN_CDECLS
+
 #define USE_GCC_ATOMICS 1
 #define ENABLE_CYCLE_COUNTER 1
 
@@ -262,6 +264,8 @@ static inline uint arch_curr_cpu_num(void)
     return 0;
 }
 #endif
+
+__END_CDECLS
 
 #endif // ASSEMBLY
 

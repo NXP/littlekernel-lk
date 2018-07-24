@@ -28,6 +28,23 @@
 #include <platform/interrupts.h>
 #include <arch/ops.h>
 
+#define LOCAL_TRACE 0
+
+#if WITH_DEV_INTERRUPT_ARM_GIC_V3
+#include <pdev/interrupt.h>
+
+status_t arch_mp_send_ipi(mp_cpu_mask_t target, mp_ipi_t ipi)
+{
+    LTRACEF("target 0x%x, ipi %u\n", target, ipi);
+
+    return interrupt_send_ipi(target, ipi);
+}
+void arch_mp_init_percpu(void)
+{
+    interrupt_init_percpu();
+}
+#else
+
 #if WITH_DEV_INTERRUPT_ARM_GIC
 #include <dev/interrupt/arm_gic.h>
 #elif PLATFORM_BCM28XX
@@ -37,7 +54,6 @@ extern void bcm28xx_send_ipi(uint irq, uint cpu_mask);
 #error need other implementation of interrupt controller that can ipi
 #endif
 
-#define LOCAL_TRACE 0
 
 #define GIC_IPI_BASE (14)
 
@@ -87,4 +103,4 @@ void arch_mp_init_percpu(void)
     //unmask_interrupt(MP_IPI_GENERIC);
     //unmask_interrupt(MP_IPI_RESCHEDULE);
 }
-
+#endif

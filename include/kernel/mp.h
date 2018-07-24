@@ -26,6 +26,7 @@
 #include <limits.h>
 #include <stdbool.h>
 #include <stdint.h>
+#include <kernel/cpu.h>
 #include <kernel/thread.h>
 
 __BEGIN_CDECLS;
@@ -42,6 +43,8 @@ typedef uint32_t mp_cpu_mask_t;
 typedef enum {
     MP_IPI_GENERIC,
     MP_IPI_RESCHEDULE,
+    MP_IPI_INTERRUPT,
+    MP_IPI_HALT
 } mp_ipi_t;
 
 #ifdef WITH_SMP
@@ -52,6 +55,7 @@ void mp_set_curr_cpu_active(bool active);
 
 /* called from arch code during reschedule irq */
 enum handler_return mp_mbx_reschedule_irq(void);
+enum handler_return mp_mbx_generic_irq(void);
 
 /* global mp state to track what the cpus are up to */
 struct mp_state {
@@ -110,6 +114,7 @@ static inline void mp_reschedule(mp_cpu_mask_t target, uint flags) {}
 static inline void mp_set_curr_cpu_active(bool active) {}
 
 static inline enum handler_return mp_mbx_reschedule_irq(void) { return 0; }
+static inline enum handler_return mp_mbx_generic_irq(void) { return 0; }
 
 // only one cpu exists in UP and if you're calling these functions, it's active...
 static inline int mp_is_cpu_active(uint cpu) { return 1; }

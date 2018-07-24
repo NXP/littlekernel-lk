@@ -23,6 +23,9 @@
 #ifndef __PLATFORM_INTERRUPTS_H
 #define __PLATFORM_INTERRUPTS_H
 
+#if WITH_DEV_INTERRUPT_ARM_GIC_V3
+#include <pdev/interrupt.h>
+#else
 #include <sys/types.h>
 
 status_t mask_interrupt(unsigned int vector);
@@ -31,5 +34,5 @@ status_t unmask_interrupt(unsigned int vector);
 typedef enum handler_return (*int_handler)(void *arg);
 
 void register_int_handler(unsigned int vector, int_handler handler, void *arg);
-
+#endif
 #endif

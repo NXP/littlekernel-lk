@@ -16,6 +16,7 @@ MODULE_SRCS += \
 	$(LOCAL_DIR)/thread.c \
 	$(LOCAL_DIR)/spinlock.S \
 	$(LOCAL_DIR)/start.S \
+	$(LOCAL_DIR)/smccc.S \
 	$(LOCAL_DIR)/cache-ops.S \
 
 #	$(LOCAL_DIR)/arm/start.S \

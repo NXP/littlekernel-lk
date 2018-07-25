@@ -31,6 +31,9 @@
 __BEGIN_CDECLS
 
 void platform_dputc(char c);
+void platform_dputs(const char* str, size_t len);
+void platform_dputs_thread(const char* str, size_t len);
+void platform_dputs_irq(const char* str, size_t len);
 int platform_dgetc(char *c, bool wait);
 
 // Should be available even if the system has panicked.

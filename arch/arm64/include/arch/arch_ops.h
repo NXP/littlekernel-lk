@@ -33,6 +33,15 @@ __BEGIN_CDECLS
 
 #define USE_GCC_ATOMICS 1
 #define ENABLE_CYCLE_COUNTER 1
+static inline void arch_spinloop_pause(void) {
+    __asm__ volatile("wfe" ::
+                         : "memory");
+}
+
+static inline void arch_spinloop_signal(void) {
+    __asm__ volatile("sev" ::
+                         : "memory");
+}
 
 // override of some routines
 static inline void arch_enable_ints(void)

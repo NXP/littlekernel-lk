@@ -1,34 +1,39 @@
-/*
- * Copyright (c) 2008-2015 Travis Geiselbrecht
- *
- * Permission is hereby granted, free of charge, to any person obtaining
- * a copy of this software and associated documentation files
- * (the "Software"), to deal in the Software without restriction,
- * including without limitation the rights to use, copy, modify, merge,
- * publish, distribute, sublicense, and/or sell copies of the Software,
- * and to permit persons to whom the Software is furnished to do so,
- * subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be
- * included in all copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
- * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
- * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
- * IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
- * CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
- * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
- * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- */
-#ifndef __DEV_UART_H
-#define __DEV_UART_H
+// Copyright 2016 The Fuchsia Authors
+// Copyright (c) 2008-2015 Travis Geiselbrecht
+//
+// Use of this source code is governed by a MIT-style
+// license that can be found in the LICENSE file or at
+// https://opensource.org/licenses/MIT
 
+#pragma once
+
+#include <compiler.h>
 #include <stdbool.h>
 #include <sys/types.h>
+
+__BEGIN_CDECLS
 
 void uart_init(void);
 void uart_init_early(void);
 
+#ifdef WITH_DEV_PDEV_UART
+bool uart_present(void);
+void uart_putc(char c);
+int uart_getc(bool wait);
+
+/*
+ * block : Blocking vs Non-Blocking
+ * map_NL : If true, map a '\n' to '\r'+'\n'
+ */
+void uart_puts(const char* str, size_t len, bool block, bool map_NL);
+
+/* panic-time uart accessors, intended to be run with interrupts disabled */
+
+void uart_start_panic(void);
+int uart_pputc(char c);
+int uart_pgetc(void);
+
+#else
 int uart_putc(int port, char c);
 int uart_getc(int port, bool wait);
 void uart_flush_tx(int port);
@@ -41,3 +46,4 @@ int uart_pgetc(int port);
 
 #endif
 
+__END_CDECLS

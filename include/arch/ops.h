@@ -42,8 +42,11 @@ static int atomic_swap(volatile int *ptr, int val);
 static int atomic_add(volatile int *ptr, int val);
 static int atomic_and(volatile int *ptr, int val);
 static int atomic_or(volatile int *ptr, int val);
-
+#if IS_64BIT
+static uint64_t arch_cycle_count(void);
+#else
 static uint32_t arch_cycle_count(void);
+#endif
 
 static uint arch_curr_cpu_num(void);
 

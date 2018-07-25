@@ -73,6 +73,7 @@
 #define ERR_ACCESS_DENIED       (-43)
 #define ERR_PARTIAL_WRITE       (-44)
 #define ERR_ALREADY_BOUND       (-45)
+#define ERR_INTERNAL            (-46)
 
 #define ERR_USER_BASE           (-16384)
 

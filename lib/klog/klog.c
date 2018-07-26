@@ -383,7 +383,7 @@ static size_t klog_puts_len(const char *str, size_t len)
 
     klog->data_checksum += deltasum;
 
-    LTRACEF("kputs len %u\n", count);
+    LTRACEF("kputs len %zu\n", count);
 
     return count;
 }
@@ -570,7 +570,7 @@ usage:
             putchar('\"');
             putchar('\n');
         } else {
-            printf("read returned error: %d\n", count);
+            printf("read returned error: %zu\n", count);
         }
         free(buf);
     } else if (!strcmp(argv[1].str, "getc")) {

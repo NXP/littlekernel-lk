@@ -35,6 +35,14 @@
 
 #define LOCAL_TRACE 0
 
+// Performance Monitors Count Enable Set, EL0.
+#define PMCNTENSET_EL0_ENABLE (1UL << 31)
+
+// Performance Monitor Control Register, EL0.
+#define PMCR_EL0_ENABLE_BIT (1 << 0)
+#define PMCR_EL0_LONG_COUNTER_BIT (1 << 6)
+
+
 #if WITH_SMP
 /* smp boot lock */
 static spin_lock_t arm_boot_cpu_lock = 1;
@@ -51,6 +59,10 @@ static void arm64_cpu_early_init(void)
     if (current_el > 1) {
         arm64_el3_to_el1();
     }
+
+    // Enable cycle counter.
+    ARM64_WRITE_SYSREG(pmcr_el0, PMCR_EL0_ENABLE_BIT | PMCR_EL0_LONG_COUNTER_BIT);
+    ARM64_WRITE_SYSREG(pmcntenset_el0, PMCNTENSET_EL0_ENABLE);
 
     arch_enable_fiqs();
 }

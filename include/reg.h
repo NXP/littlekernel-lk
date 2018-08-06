@@ -38,6 +38,8 @@
 
 #define writel(v, a) (*REG32(a) = (v))
 #define readl(a) (*REG32(a))
+#define writes(v, a) (*REG16(a) = (v))
+#define reads(a) (*REG16(a))
 #define writeb(v, a) (*REG8(a) = (v))
 #define readb(a) (*REG8(a))
 

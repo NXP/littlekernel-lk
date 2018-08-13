@@ -8,6 +8,7 @@ MODULE_DEPS := \
 	lib/heap
 
 MODULE_SRCS := \
+	$(LOCAL_DIR)/cond.c \
 	$(LOCAL_DIR)/debug.c \
 	$(LOCAL_DIR)/event.c \
 	$(LOCAL_DIR)/init.c \
@@ -16,7 +17,8 @@ MODULE_SRCS := \
 	$(LOCAL_DIR)/timer.c \
 	$(LOCAL_DIR)/semaphore.c \
 	$(LOCAL_DIR)/mp.c \
-	$(LOCAL_DIR)/port.c
+	$(LOCAL_DIR)/port.c \
+
 
 ifeq ($(WITH_KERNEL_VM),1)
 MODULE_DEPS += kernel/vm

@@ -1,26 +1,11 @@
-/*
- * Copyright (c) 2008-2014 Travis Geiselbrecht
- * Copyright (c) 2012-2012 Shantanu Gupta
- *
- * Permission is hereby granted, free of charge, to any person obtaining
- * a copy of this software and associated documentation files
- * (the "Software"), to deal in the Software without restriction,
- * including without limitation the rights to use, copy, modify, merge,
- * publish, distribute, sublicense, and/or sell copies of the Software,
- * and to permit persons to whom the Software is furnished to do so,
- * subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be
- * included in all copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
- * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
- * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
- * IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
- * CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
- * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
- * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- */
+// Copyright 2016 The Fuchsia Authors
+// Copyright (c) 2008-2014 Travis Geiselbrecht
+// Copyright (c) 2012-2012 Shantanu Gupta
+//
+// Use of this source code is governed by a MIT-style
+// license that can be found in the LICENSE file or at
+// https://opensource.org/licenses/MIT
+
 
 /**
  * @file
@@ -67,6 +52,32 @@ void mutex_destroy(mutex_t *m)
     THREAD_UNLOCK(state);
 }
 
+status_t mutex_acquire_timeout_internal(mutex_t *m, lk_time_t timeout)
+{
+    if (unlikely(++m->count > 1)) {
+        status_t ret = wait_queue_block(&m->wait, timeout);
+        if (unlikely(ret < NO_ERROR)) {
+            /* if the acquisition timed out, back out the acquire and exit */
+            if (likely(ret == ERR_TIMED_OUT)) {
+                /*
+                 * race: the mutex may have been destroyed after the timeout,
+                 * but before we got scheduled again which makes messing with the
+                 * count variable dangerous.
+                 */
+                m->count--;
+            }
+            /* if there was a general error, it may have been destroyed out from
+             * underneath us, so just exit (which is really an invalid state anyway)
+             */
+            return ret;
+        }
+    }
+
+    m->holder = get_current_thread();
+
+    return NO_ERROR;
+}
+
 /**
  * @brief  Mutex wait with timeout
  *
@@ -88,32 +99,19 @@ status_t mutex_acquire_timeout(mutex_t *m, lk_time_t timeout)
 #endif
 
     THREAD_LOCK(state);
-
-    status_t ret = NO_ERROR;
-    if (unlikely(++m->count > 1)) {
-        ret = wait_queue_block(&m->wait, timeout);
-        if (unlikely(ret < NO_ERROR)) {
-            /* if the acquisition timed out, back out the acquire and exit */
-            if (likely(ret == ERR_TIMED_OUT)) {
-                /*
-                 * race: the mutex may have been destroyed after the timeout,
-                 * but before we got scheduled again which makes messing with the
-                 * count variable dangerous.
-                 */
-                m->count--;
-            }
-            /* if there was a general error, it may have been destroyed out from
-             * underneath us, so just exit (which is really an invalid state anyway)
-             */
-            goto err;
-        }
-    }
-
-    m->holder = get_current_thread();
-
-err:
+    status_t ret = mutex_acquire_timeout_internal(m, timeout);
     THREAD_UNLOCK(state);
     return ret;
+}
+
+void mutex_release_internal(mutex_t *m, bool reschedule)
+{
+    m->holder = 0;
+
+    if (unlikely(--m->count >= 1)) {
+        /* release a thread */
+        wait_queue_wake_one(&m->wait, reschedule, NO_ERROR);
+    }
 }
 
 /**
@@ -131,14 +129,7 @@ status_t mutex_release(mutex_t *m)
 #endif
 
     THREAD_LOCK(state);
-
-    m->holder = 0;
-
-    if (unlikely(--m->count >= 1)) {
-        /* release a thread */
-        wait_queue_wake_one(&m->wait, true, NO_ERROR);
-    }
-
+    mutex_release_internal(m, true);
     THREAD_UNLOCK(state);
     return NO_ERROR;
 }

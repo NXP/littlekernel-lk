@@ -1,26 +1,11 @@
-/*
- * Copyright (c) 2008-2014 Travis Geiselbrecht
- * Copyright (c) 2012 Shantanu Gupta
- *
- * Permission is hereby granted, free of charge, to any person obtaining
- * a copy of this software and associated documentation files
- * (the "Software"), to deal in the Software without restriction,
- * including without limitation the rights to use, copy, modify, merge,
- * publish, distribute, sublicense, and/or sell copies of the Software,
- * and to permit persons to whom the Software is furnished to do so,
- * subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be
- * included in all copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
- * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
- * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
- * IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
- * CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
- * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
- * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- */
+// Copyright 2016 The Fuchsia Authors
+// Copyright (c) 2008-2014 Travis Geiselbrecht
+// Copyright (c) 2012 Shantanu Gupta
+//
+// Use of this source code is governed by a MIT-style
+// license that can be found in the LICENSE file or at
+// https://opensource.org/licenses/MIT
+
 #ifndef __KERNEL_MUTEX_H
 #define __KERNEL_MUTEX_H
 
@@ -57,6 +42,10 @@ void mutex_init(mutex_t *);
 void mutex_destroy(mutex_t *);
 status_t mutex_acquire_timeout(mutex_t *, lk_time_t); /* try to acquire the mutex with a timeout value */
 status_t mutex_release(mutex_t *);
+
+/* Internal functions for use by condvar implementation. */
+status_t mutex_acquire_timeout_internal(mutex_t *m, lk_time_t timeout);
+void mutex_release_internal(mutex_t *m, bool reschedule);
 
 static inline status_t mutex_acquire(mutex_t *m)
 {

@@ -59,6 +59,7 @@ void qsort(void *aa, size_t n, size_t es, int (*cmp)(const void *, const void *)
 void *bsearch(const void *key, const void *base, size_t num_elems, size_t size,
               int (*compare)(const void *, const void *));
 unsigned long int strtoul(const char *nptr, char **endptr, int base);
+unsigned long long strtoull(const char *nptr, char **endptr, int base);
 char *getenv(const char *name);
 
 __END_CDECLS;

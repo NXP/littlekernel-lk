@@ -120,7 +120,7 @@ unsigned long long atoull(const char *num)
 
     return value;
 }
-
+#ifdef HAVE_NOT_STRTOUL
 unsigned long strtoul(const char *nptr, char **endptr, int base)
 {
     int neg = 0;
@@ -191,3 +191,4 @@ unsigned long strtoul(const char *nptr, char **endptr, int base)
 
     return ret;
 }
+#endif

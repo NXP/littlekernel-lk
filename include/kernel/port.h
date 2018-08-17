@@ -34,7 +34,7 @@ __BEGIN_CDECLS;
  * of read-side ports.
  */
 
-#define PORT_NAME_LEN 12
+#define PORT_NAME_LEN 64
 
 typedef void *port_t;
 

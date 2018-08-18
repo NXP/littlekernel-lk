@@ -62,6 +62,8 @@ unsigned long int strtoul(const char *nptr, char **endptr, int base);
 unsigned long long strtoull(const char *nptr, char **endptr, int base);
 char *getenv(const char *name);
 
+double strtod(const char *nptr, char **endptr);
+
 __END_CDECLS;
 
 #endif

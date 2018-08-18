@@ -13,6 +13,7 @@ MODULE_SRCS += \
 	$(LOCAL_DIR)/errno.c \
 	$(LOCAL_DIR)/printf.c \
 	$(LOCAL_DIR)/rand.c \
+	$(LOCAL_DIR)/strtod.c \
 	$(LOCAL_DIR)/strtol.c \
 	$(LOCAL_DIR)/strtoul.c \
 	$(LOCAL_DIR)/strtoll.c \

@@ -265,3 +265,8 @@ done:
     }
     return fraction;
 }
+
+double atof(const char *nptr)
+{
+    return strtod(nptr, NULL);
+}

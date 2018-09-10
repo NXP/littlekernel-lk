@@ -34,6 +34,14 @@ typedef short              int16_t;
 typedef int                int32_t;
 typedef long long          int64_t;
 
+#ifndef SHORT_MIN
+#define SHORT_MIN SHRT_MIN
+#endif
+
+#ifndef SHORT_MAX
+#define SHORT_MAX SHRT_MAX
+#endif
+
 #define INT8_MIN    CHAR_MIN
 #define INT16_MIN   SHORT_MIN
 #define INT32_MIN   INT_MIN

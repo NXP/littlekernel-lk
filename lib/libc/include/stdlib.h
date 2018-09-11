@@ -64,6 +64,11 @@ char *getenv(const char *name);
 
 double strtod(const char *nptr, char **endptr);
 double atof(const char *nptr);
+
+int abs (int i);
+long labs (long x);
+long long llabs (long long j);
+
 __END_CDECLS;
 
 #endif

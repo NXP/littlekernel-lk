@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2008-2014 Travis Geiselbrecht
+ * Copyright (c) 2013-2015 Travis Geiselbrecht
  *
  * Permission is hereby granted, free of charge, to any person obtaining
  * a copy of this software and associated documentation files
@@ -20,25 +20,39 @@
  * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-#ifndef __APP_TESTS_H
-#define __APP_TESTS_H
-
-#include <lib/console.h>
-
-int cbuf_tests(int argc, const cmd_args *argv);
-int fibo(int argc, const cmd_args *argv);
-int port_tests(void);
-int spinner(int argc, const cmd_args *argv);
-int thread_tests(void);
-void benchmarks(void);
-void clock_tests(void);
-void printf_tests(void);
-void printf_tests_float(void);
-
 #if WITH_LIB_OPENLIBM
-int math_float_test(int verbose);
-int math_double_test(int verbose);
-#endif
 
-#endif
+#include <stdio.h>
+#include <math.h>
+#include <lib/console.h>
+#include <app/tests.h>
 
+static const char *usage =  "Usage: math_tests <verbose: [0..3]>\n";
+
+static int math_tests(int argc, const cmd_args *argv)
+{
+    int ret, verdict = 0;
+    printf("Math library test:\n");
+    int verbose = 0;
+    if (argc == 2) {
+        verbose = argv[2].i;
+    }
+    ret = math_float_test(verbose);
+    if (ret)
+        printf("Math float test failed!\n");
+    verdict += ret;
+
+    ret = math_double_test(verbose);
+    if (ret)
+        printf("Math double test failed!\n");
+    verdict += ret;
+
+    return verdict;
+
+}
+
+STATIC_COMMAND_START
+STATIC_COMMAND("math_tests", "math library test", (console_cmd)&math_tests)
+STATIC_COMMAND_END(math_tests);
+
+#endif // WITH_LIB_OPENLIBM

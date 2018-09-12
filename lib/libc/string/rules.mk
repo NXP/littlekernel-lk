@@ -26,6 +26,7 @@ C_STRING_OPS := \
 	strpbrk \
 	strrchr \
 	strspn \
+	strcspn \
 	strstr \
 	strtok \
 	strtok_r \

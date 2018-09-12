@@ -8,6 +8,7 @@ MODULE_DEPS := \
 
 MODULE_SRCS += \
 	$(LOCAL_DIR)/atoi.c \
+	$(LOCAL_DIR)/abort.c \
 	$(LOCAL_DIR)/bsearch.c \
 	$(LOCAL_DIR)/ctype.c \
 	$(LOCAL_DIR)/errno.c \

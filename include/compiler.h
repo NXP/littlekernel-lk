@@ -157,6 +157,7 @@
 
 /* TODO: add type check */
 #define countof(a) (sizeof(a) / sizeof((a)[0]))
+#define ARRAY_SIZE(x) countof(x)
 
 /* CPP header guards */
 #ifdef __cplusplus
@@ -166,5 +167,47 @@
 #define __BEGIN_CDECLS
 #define __END_CDECLS
 #endif
+
+
+#define READ_ONCE(x) \
+({ \
+	union { typeof(x) __val; char __c[1]; } __u; \
+    volatile void *p = &(x); \
+    void *res = __u.__c; \
+    int size = sizeof(x); \
+	switch (size) { \
+	case 1: *(u8 *)res = *(volatile u8 *)p; break; \
+	case 2: *(u16 *)res = *(volatile u16 *)p; break; \
+	case 4: *(u32 *)res = *(volatile u32 *)p; break; \
+	case 8: *(u64 *)res = *(volatile u64 *)p; break; \
+	default: \
+		CF; \
+		__builtin_memcpy((void *)res, (const void *)p, size); \
+		CF; \
+	} \
+	__u.__val; \
+})
+
+
+#define WRITE_ONCE(x, val) \
+({							\
+	union { typeof(x) __val; char __c[1]; } __u = \
+		{ .__val = (typeof(x)) (val) }; \
+    volatile void *p = &(x); \
+    void *res = __u.__c; \
+    int size = sizeof(x); \
+	switch (size) { \
+	case 1: *(volatile u8 *)p = *(u8 *)res; break; \
+	case 2: *(volatile u16 *)p = *(u16 *)res; break; \
+	case 4: *(volatile u32 *)p = *(u32 *)res; break; \
+	case 8: *(volatile u64 *)p = *(u64 *)res; break; \
+	default: \
+		CF; \
+		__builtin_memcpy((void *)p, (const void *)res, size); \
+		CF; \
+	} \
+	__u.__val; \
+ })
+
 
 #endif

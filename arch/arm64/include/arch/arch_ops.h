@@ -103,6 +103,66 @@ static inline bool arch_fiqs_disabled(void)
 #define smp_rmb()   CF
 #endif
 
+#define smp_store_release(p, v)					\
+do {									\
+	union { typeof(*p) __val; char __c[1]; } __u =			\
+		{ .__val = (typeof(*p)) (v) }; 			\
+	switch (sizeof(*p)) {						\
+	case 1:								\
+		asm volatile ("stlrb %w1, %0"				\
+				: "=Q" (*p)				\
+				: "r" (*(u8 *)__u.__c)		\
+				: "memory");				\
+		break;							\
+	case 2:								\
+		asm volatile ("stlrh %w1, %0"				\
+				: "=Q" (*p)				\
+				: "r" (*(u16 *)__u.__c)		\
+				: "memory");				\
+		break;							\
+	case 4:								\
+		asm volatile ("stlr %w1, %0"				\
+				: "=Q" (*p)				\
+				: "r" (*(u32 *)__u.__c)		\
+				: "memory");				\
+		break;							\
+	case 8:								\
+		asm volatile ("stlr %1, %0"				\
+				: "=Q" (*p)				\
+				: "r" (*(u64 *)__u.__c)		\
+				: "memory");				\
+		break;							\
+	}								\
+} while (0)
+
+#define smp_load_acquire(p)						\
+({									\
+	union { typeof(*p) __val; char __c[1]; } __u;			\
+	switch (sizeof(*p)) {						\
+	case 1:								\
+		asm volatile ("ldarb %w0, %1"				\
+			: "=r" (*(u8 *)__u.__c)			\
+			: "Q" (*p) : "memory");				\
+		break;							\
+	case 2:								\
+		asm volatile ("ldarh %w0, %1"				\
+			: "=r" (*(u16 *)__u.__c)			\
+			: "Q" (*p) : "memory");				\
+		break;							\
+	case 4:								\
+		asm volatile ("ldar %w0, %1"				\
+			: "=r" (*(u32 *)__u.__c)			\
+			: "Q" (*p) : "memory");				\
+		break;							\
+	case 8:								\
+		asm volatile ("ldar %0, %1"				\
+			: "=r" (*(u64 *)__u.__c)			\
+			: "Q" (*p) : "memory");				\
+		break;							\
+	}								\
+	__u.__val;							\
+})
+
 static inline int atomic_add(volatile int *ptr, int val)
 {
 #if USE_GCC_ATOMICS
@@ -232,7 +292,6 @@ static inline int atomic_cmpxchg(volatile int *ptr, int oldval, int newval)
 static inline uint64_t arch_cycle_count(void) {
     return ARM64_READ_SYSREG(pmccntr_el0);
 }
-
 
 /* use the cpu local thread context pointer to store current_thread */
 static inline struct thread *get_current_thread(void)

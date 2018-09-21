@@ -72,6 +72,8 @@ void _panic(void *caller, const char *fmt, ...) __PRINTFLIKE(2, 3) __NO_RETURN;
 
 #define PANIC_UNIMPLEMENTED panic("%s unimplemented\n", __PRETTY_FUNCTION__)
 
+#define BUG_ON(cond) do { if (cond) panic("BUG_ON: "#cond"\n");} while(0)
+
 /* spin the cpu for a period of (short) time */
 void spin(uint32_t usecs);
 

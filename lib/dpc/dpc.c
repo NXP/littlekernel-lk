@@ -28,6 +28,7 @@
 #include <lib/dpc.h>
 #include <kernel/thread.h>
 #include <kernel/event.h>
+#include <kernel/spinlock.h>
 #include <lk/init.h>
 
 struct dpc {
@@ -37,6 +38,7 @@ struct dpc {
     void *arg;
 };
 
+static spin_lock_t dpc_lock = SPIN_LOCK_INITIAL_VALUE;
 static struct list_node dpc_list = LIST_INITIAL_VALUE(dpc_list);
 static event_t dpc_event;
 
@@ -53,27 +55,33 @@ status_t dpc_queue(dpc_callback cb, void *arg, uint flags)
 
     dpc->cb = cb;
     dpc->arg = arg;
-    enter_critical_section();
+
+    // disable interrupts before finding lock
+    spin_lock_saved_state_t state;
+    spin_lock_irqsave(&dpc_lock, state);
     list_add_tail(&dpc_list, &dpc->node);
+    spin_unlock_irqrestore(&dpc_lock, state);
+
     event_signal(&dpc_event, (flags & DPC_FLAG_NORESCHED) ? false : true);
-    exit_critical_section();
 
     return NO_ERROR;
 }
 
 static int dpc_thread_routine(void *arg)
 {
+
+    spin_lock_saved_state_t state;
     for (;;) {
         event_wait(&dpc_event);
 
-        enter_critical_section();
+        spin_lock_irqsave(&dpc_lock, state);
         struct dpc *dpc = list_remove_head_type(&dpc_list, struct dpc, node);
         if (!dpc)
             event_unsignal(&dpc_event);
-        exit_critical_section();
+        spin_unlock_irqrestore(&dpc_lock, state);
 
         if (dpc) {
-//          dprintf("dpc calling %p, arg %p\n", dpc->cb, dpc->arg);
+//            dprintf("dpc calling %p, arg %p\n", dpc->cb, dpc->arg);
             dpc->cb(dpc->arg);
 
             free(dpc);

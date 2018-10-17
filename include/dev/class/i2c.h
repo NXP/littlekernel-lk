@@ -43,6 +43,7 @@ status_t class_i2c_write(struct device *dev, uint8_t addr, const void *buf, size
 status_t class_i2c_read(struct device *dev, uint8_t addr, void *buf, size_t len);
 status_t class_i2c_write_reg(struct device *dev, uint8_t addr, uint8_t reg, uint8_t value);
 status_t class_i2c_read_reg(struct device *dev, uint8_t addr, uint8_t reg, void *value);
+struct device * class_i2c_get_device_by_id(int bus_id);
 
 __END_CDECLS
 

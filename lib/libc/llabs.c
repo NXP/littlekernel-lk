@@ -1149,7 +1149,6 @@ http://www.opensource.org/licenses.
 
 (50) Michael R. Neilly (riscv-* targets)
 
-/*
 (c) Copyright 2017 Michael R. Neilly
 All rights reserved.
 

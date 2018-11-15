@@ -56,6 +56,10 @@ int klog_get_buffer(int buffer, iovec_t *vec);
  * Read functions actively remove data from the klog on read
  */
 ssize_t klog_read(char *buf, size_t len, int buf_id);
+/* Advance the tail pointer,
+ * if data were consumed in place thanks to get_buffer
+ */
+void klog_advance_tail(size_t offset, int buf_id);
 char klog_getc(int buf_id);
 char klog_getchar(void);
 bool klog_has_data(void);

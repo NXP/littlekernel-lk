@@ -320,6 +320,23 @@ ssize_t klog_read(char *buf, size_t len, int buf_id)
     return offset;
 }
 
+void klog_advance_tail(size_t offset, int buf_id)
+{
+    struct klog_header *k;
+
+    if (buf_id < 0)
+        k = klog;
+    else
+        k = find_nth_log(buf_id);
+
+    DEBUG_ASSERT(k);
+    DEBUG_ASSERT(k->magic == KLOG_HEADER_MAGIC);
+
+    klog->tail += offset;
+    if (klog->tail >= klog->size)
+        klog->tail -= klog->size;
+}
+
 char klog_getc(int buf_id)
 {
     char c = '\0';

@@ -61,6 +61,7 @@ char klog_getchar(void);
 bool klog_has_data(void);
 
 void klog_putchar(char c);
+size_t klog_puts_len(const char *str, size_t len);
 void klog_puts(const char *str);
 void klog_printf(const char *fmt, ...) __PRINTFLIKE(1, 2);
 void klog_vprintf(const char *fmt, va_list ap);

@@ -341,7 +341,7 @@ bool klog_has_data(void)
     return (klog->head != klog->tail);
 }
 
-static size_t klog_puts_len(const char *str, size_t len)
+size_t klog_puts_len(const char *str, size_t len)
 {
     LTRACEF("puts '%s'\n", str);
 

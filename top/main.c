@@ -38,6 +38,11 @@
 #include <kernel/thread.h>
 #include <lk/init.h>
 #include <lk/main.h>
+#if WITH_LIB_DEBUGLOG
+#include <lib/debuglog.h>
+#else
+static void dlog_bypass_init_early(void) {}
+#endif
 
 /* saved boot arguments from whoever loaded the system */
 ulong lk_boot_args[4];
@@ -79,6 +84,8 @@ void lk_main(ulong arg0, ulong arg1, ulong arg2, ulong arg3)
     lk_boot_args[1] = arg1;
     lk_boot_args[2] = arg2;
     lk_boot_args[3] = arg3;
+
+    dlog_bypass_init_early();
 
     // get us into some sort of thread context
     thread_init_early();

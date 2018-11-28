@@ -37,6 +37,10 @@
 #include <kernel/vm.h>
 #include <lk/init.h>
 
+#if WITH_LIB_DEBUGLOG
+#include <lib/debuglog.h>
+#endif
+
 /* routines for dealing with main console io */
 
 #if WITH_LIB_SM
@@ -116,6 +120,14 @@ void unregister_print_callback(print_callback_t *cb)
 
 static void __kernel_stdout_write(const char *s, size_t len)
 {
+
+#if WITH_LIB_DEBUGLOG
+    if (dlog_bypass() == false) {
+        if (dlog_write(0, s, len) == 0)
+            return;
+    }
+#endif
+
     __kernel_console_write(s, len);
     __kernel_serial_write(s, len);
 

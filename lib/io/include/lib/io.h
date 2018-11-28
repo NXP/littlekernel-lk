@@ -41,6 +41,10 @@ struct __print_callback {
 void register_print_callback(print_callback_t *cb);
 void unregister_print_callback(print_callback_t *cb);
 
+/* back doors to directly write to the kernel serial and console */
+void __kernel_serial_write(const char* str, size_t len);
+void __kernel_console_write(const char* str, size_t len);
+
 /* the underlying handle to talk to io devices */
 struct io_handle;
 typedef struct io_handle_hooks {

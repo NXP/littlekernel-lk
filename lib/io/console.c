@@ -56,8 +56,7 @@ cbuf_t console_input_cbuf;
 static uint8_t console_cbuf_buf[CONSOLE_BUF_LEN];
 #endif // CONSOLE_HAS_INPUT_BUFFER
 
-/* print lock must be held when invoking out, outs, outc */
-static void out_count(const char *str, size_t len)
+void __kernel_console_write(const char* str, size_t len)
 {
     print_callback_t *cb;
 
@@ -73,9 +72,19 @@ static void out_count(const char *str, size_t len)
 
         spin_unlock_restore(&print_spin_lock, state, PRINT_LOCK_FLAGS);
     }
+}
+
+static spin_lock_t dputc_spin_lock = 0;
+
+void __kernel_serial_write(const char* str, size_t len)
+{
+    spin_lock_saved_state_t state;
+    spin_lock_irqsave(&dputc_spin_lock, state);
 
     /* write out the serial port */
-    platform_dputs(str, len);
+    platform_dputs_irq(str, len);
+
+    spin_unlock_irqrestore(&dputc_spin_lock, state);
 }
 
 void register_print_callback(print_callback_t *cb)
@@ -100,7 +109,9 @@ void unregister_print_callback(print_callback_t *cb)
 
 static ssize_t __debug_stdio_write(io_handle_t *io, const char *s, size_t len)
 {
-    out_count(s, len);
+    __kernel_console_write(s, len);
+    __kernel_serial_write(s, len);
+
     return len;
 }
 

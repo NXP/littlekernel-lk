@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2008-2015 Travis Geiselbrecht
+ * Copyright 2018 NXP
  *
  * Permission is hereby granted, free of charge, to any person obtaining
  * a copy of this software and associated documentation files
@@ -33,6 +34,7 @@
 #include <platform.h>
 #include <platform/debug.h>
 #include <kernel/thread.h>
+#include <kernel/vm.h>
 #include <lk/init.h>
 
 /* routines for dealing with main console io */
@@ -107,11 +109,72 @@ void unregister_print_callback(print_callback_t *cb)
     spin_unlock_restore(&print_spin_lock, state, PRINT_LOCK_FLAGS);
 }
 
-static ssize_t __debug_stdio_write(io_handle_t *io, const char *s, size_t len)
+static void __kernel_stdout_write(const char *s, size_t len)
 {
     __kernel_console_write(s, len);
     __kernel_serial_write(s, len);
 
+}
+
+#if WITH_DEBUG_LINEBUFFER
+static struct s_linebuffer {
+    char buf[THREAD_LINEBUFFER_LENGTH];
+    size_t pos;
+} core_linebuffer[SMP_MAX_CPUS];
+
+
+static void __kernel_stdout_write_buffered(const char* str, size_t len)
+{
+    thread_t* t = get_current_thread();
+
+    char* buf;
+    size_t pos;
+    size_t *ppos;
+
+    if (unlikely(t == NULL)) {
+        unsigned core = arch_curr_cpu_num();
+        buf = core_linebuffer[core].buf;
+        pos = core_linebuffer[core].pos;
+        ppos = &core_linebuffer[core].pos;
+    } else {
+        buf = t->linebuffer;
+        pos = t->linebuffer_pos;
+        ppos = &t->linebuffer_pos;
+    }
+
+    // look for corruption and don't continue
+    if (unlikely(!is_kernel_address((uintptr_t)buf) || pos >= THREAD_LINEBUFFER_LENGTH)) {
+        const char* str = "<linebuffer corruption>\n";
+        __kernel_stdout_write(str, strlen(str));
+        return;
+    }
+
+    while (len-- > 0) {
+        char c = *str++;
+        buf[pos++] = c;
+        if (c == '\n') {
+            __kernel_stdout_write(buf, pos);
+            pos = 0;
+            continue;
+        }
+        if (pos == (THREAD_LINEBUFFER_LENGTH - 1)) {
+            buf[pos++] = '\n';
+            __kernel_stdout_write(buf, pos);
+            pos = 0;
+            continue;
+        }
+    }
+    *ppos = pos;
+}
+#endif
+
+static ssize_t __debug_stdio_write(io_handle_t *io, const char *s, size_t len)
+{
+#if WITH_DEBUG_LINEBUFFER
+    __kernel_stdout_write_buffered(s, len);
+#else
+    __kernel_stdout_write(s, len);
+#endif
     return len;
 }
 

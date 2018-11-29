@@ -47,15 +47,15 @@ int fputc(int _c, FILE *fp)
 
 int putchar(int c)
 {
-    return fputc(c, stdout);
+    platform_dputc(c);
+    return c;
 }
 
 int puts(const char *str)
 {
-    int err = fputs(str, stdout);
-    if (err >= 0)
-        err = fputc('\n', stdout);
-    return err;
+    int len = strlen(str);
+    platform_dputs_thread(str, len);
+    return len;
 }
 
 int fputs(const char *s, FILE *fp)
@@ -91,7 +91,13 @@ int getc(FILE *fp)
 
 int getchar(void)
 {
-    return getc(stdin);
+    char c;
+    int err = platform_dgetc(&c, true);
+    if (err < 0) {
+        return err;
+    } else {
+        return c;
+    }
 }
 
 static int _fprintf_output_func(const char *str, size_t len, void *state)

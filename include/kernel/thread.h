@@ -81,6 +81,8 @@ enum thread_tls_list {
 
 #define THREAD_MAGIC (0x74687264) // 'thrd'
 
+#define THREAD_LINEBUFFER_LENGTH 128
+
 typedef struct thread {
     int magic;
     struct list_node thread_list_node;
@@ -129,6 +131,12 @@ typedef struct thread {
     uintptr_t tls[MAX_TLS_ENTRY];
 
     char name[32];
+#if WITH_DEBUG_LINEBUFFER
+    // buffering for debug/klog output
+    size_t linebuffer_pos;
+    char linebuffer[THREAD_LINEBUFFER_LENGTH];
+#endif
+
 } thread_t;
 
 #if WITH_SMP

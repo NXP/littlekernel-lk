@@ -293,6 +293,23 @@ static const cmd *match_command(const char *command, const uint8_t availability_
     return NULL;
 }
 
+static inline int cgetchar(void)
+{
+    char c;
+    int r = platform_dgetc(&c, true);
+    return (r < 0) ? r : c;
+}
+
+static inline void cputchar(char c)
+{
+    platform_dputc(c);
+}
+
+static inline void cputs(const char* s)
+{
+    platform_dputs_thread(s, strlen(s));
+}
+
 static int read_debug_line(const char **outbuffer, void *cookie)
 {
     int pos = 0;
@@ -306,7 +323,7 @@ static int read_debug_line(const char **outbuffer, void *cookie)
     for (;;) {
         /* loop until we get a char */
         int c;
-        if ((c = getchar()) < 0)
+        if ((c = cgetchar()) < 0)
             continue;
 
 //      TRACEF("c = 0x%hhx\n", c);
@@ -316,14 +333,14 @@ static int read_debug_line(const char **outbuffer, void *cookie)
                 case '\r':
                 case '\n':
                     if (echo)
-                        putchar('\n');
+                        cputchar('\n');
                     goto done;
 
                 case 0x7f: // backspace or delete
                 case 0x8:
                     if (pos > 0) {
                         pos--;
-                        fputs("\b \b", stdout); // wipe out a character
+                        cputs("\b \b"); // wipe out a character
                     }
                     break;
 
@@ -334,7 +351,7 @@ static int read_debug_line(const char **outbuffer, void *cookie)
                 default:
                     buffer[pos++] = c;
                     if (echo)
-                        putchar(c);
+                        cputchar(c);
             }
         } else if (escape_level == 1) {
             // inside an escape, look for '['
@@ -349,13 +366,13 @@ static int read_debug_line(const char **outbuffer, void *cookie)
                 case 67: // right arrow
                     buffer[pos++] = ' ';
                     if (echo)
-                        putchar(' ');
+                        cputchar(' ');
                     break;
                 case 68: // left arrow
                     if (pos > 0) {
                         pos--;
                         if (echo) {
-                            fputs("\b \b", stdout); // wipe out a character
+                            cputs("\b \b"); // wipe out a character
                         }
                     }
                     break;
@@ -366,7 +383,7 @@ static int read_debug_line(const char **outbuffer, void *cookie)
                     while (pos > 0) {
                         pos--;
                         if (echo) {
-                            fputs("\b \b", stdout); // wipe out a character
+                            cputs("\b \b"); // wipe out a character
                         }
                     }
 
@@ -376,7 +393,7 @@ static int read_debug_line(const char **outbuffer, void *cookie)
                         strlcpy(buffer, next_history(&history_cursor), LINE_LEN);
                     pos = strlen(buffer);
                     if (echo)
-                        fputs(buffer, stdout);
+                        cputs(buffer);
                     break;
 #endif
                 default:
@@ -387,7 +404,7 @@ static int read_debug_line(const char **outbuffer, void *cookie)
 
         /* end of line. */
         if (pos == (LINE_LEN - 1)) {
-            fputs("\nerror: line too long\n", stdout);
+            cputs("\nerror: line too long\n");
             pos = 0;
             goto done;
         }
@@ -632,7 +649,7 @@ static status_t command_loop(int (*get_line)(const char **, void *), void *get_l
         // read a new line if it hadn't been split previously and passed back from tokenize_command
         if (continuebuffer == NULL) {
             if (showprompt)
-                fputs("] ", stdout);
+                cputs("] ");
 
             int len = get_line(&buffer, get_line_cookie);
             if (len < 0)
@@ -856,34 +873,58 @@ static int cmd_echo(int argc, const cmd_args *argv)
     return NO_ERROR;
 }
 
+
+static void panic_putc(char c) {
+    platform_pputc(c);
+}
+
+static void panic_puts(const char* str) {
+    for (;;) {
+        char c = *str++;
+        if (c == 0) {
+            break;
+        }
+        platform_pputc(c);
+    }
+}
+
+static int panic_getc(void) {
+    char c;
+    if (platform_pgetc(&c, false) < 0) {
+        return -1;
+    } else {
+        return c;
+    }
+}
+
 static void read_line_panic(char *buffer, const size_t len, FILE *panic_fd)
 {
     size_t pos = 0;
 
     for (;;) {
         int c;
-        if ((c = getc(panic_fd)) < 0) {
+        if ((c = panic_getc()) < 0) {
             continue;
         }
 
         switch (c) {
             case '\r':
             case '\n':
-                fputc('\n', panic_fd);
+                panic_putc('\n');
                 goto done;
             case 0x7f: // backspace or delete
             case 0x8:
                 if (pos > 0) {
                     pos--;
-                    fputs("\b \b", panic_fd); // wipe out a character
+                    panic_puts("\b \b"); // wipe out a character
                 }
                 break;
             default:
                 buffer[pos++] = c;
-                fputc(c, panic_fd);
+                panic_putc(c);
         }
         if (pos == (len - 1)) {
-            fputs("\nerror: line too long\n", panic_fd);
+            panic_puts("\nerror: line too long\n");
             pos = 0;
             goto done;
         }
@@ -905,7 +946,7 @@ void panic_shell_start(void)
         return;
 
     for (;;) {
-        fputs("! ", panic_fd);
+        panic_puts("! ");
         read_line_panic(input_buffer, PANIC_LINE_LEN, panic_fd);
 
         int argc;
@@ -926,7 +967,7 @@ void panic_shell_start(void)
 
         const cmd *command = match_command(args[0].str, CMD_AVAIL_PANIC);
         if (!command) {
-            fputs("command not found\n", panic_fd);
+            panic_puts("command not found\n");
             continue;
         }
 

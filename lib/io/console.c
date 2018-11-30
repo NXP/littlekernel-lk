@@ -84,7 +84,11 @@ void __kernel_serial_write(const char* str, size_t len)
     spin_lock_irqsave(&dputc_spin_lock, state);
 
     /* write out the serial port */
+#ifdef USE_DPUTS_IRQ
     platform_dputs_irq(str, len);
+#else
+    platform_dputs(str, len);
+#endif
 
     spin_unlock_irqrestore(&dputc_spin_lock, state);
 }

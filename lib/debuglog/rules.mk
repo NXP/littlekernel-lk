@@ -12,4 +12,6 @@ MODULE := $(LOCAL_DIR)
 MODULE_SRCS := \
     $(LOCAL_DIR)/debuglog.c \
 
+GLOBAL_CFLAGS += -fno-builtin-printf
+
 include make/module.mk

@@ -59,6 +59,11 @@ bool dlog_bypass(void) {
     return dlog_bypass_;
 }
 
+void dlog_panic(void)
+{
+    DLOG.panic = true;
+}
+
 // The debug log maintains a circular buffer of debug log records,
 // consisting of a common header (dlog_header_t) followed by up
 // to 224 bytes of textual log message.  Records are aligned on

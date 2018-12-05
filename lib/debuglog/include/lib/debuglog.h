@@ -77,5 +77,6 @@ status_t dlog_read(dlog_reader_t* rdr, uint32_t flags, void* ptr, size_t len, si
 void dlog_bypass_init_early(void);
 void dlog_bypass_init(void);
 bool dlog_bypass(void);
+void dlog_panic(void);
 
 __END_CDECLS

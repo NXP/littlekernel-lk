@@ -1,4 +1,5 @@
 // Copyright 2016 The Fuchsia Authors
+// Copyright 2018 NXP
 //
 // Use of this source code is governed by a MIT-style
 // license that can be found in the LICENSE file or at
@@ -114,7 +115,7 @@ status_t dlog_write(uint32_t flags, const void* data_ptr, size_t len) {
     hdr.header = (uint32_t)(DLOG_HDR_SET(wiresize, DLOG_MIN_RECORD + len));
     hdr.datalen = (uint16_t)(len);
     hdr.flags = (uint16_t)(flags);
-    hdr.timestamp = current_time();
+    hdr.timestamp = current_time_hires();
     thread_t* t = get_current_thread();
     if (t) {
         hdr.tid = (uint64_t) t;
@@ -327,9 +328,9 @@ static int debuglog_dumper(void* arg) {
             const char *name = "unknown";
             if (rec.hdr.tid)
                 name = ((thread_t*)(rec.hdr.tid))->name;
-            n = snprintf(tmp, sizeof(tmp), "[%05d.%03d] %s > %s\n",
-                         (int)(rec.hdr.timestamp / 1000ULL),
-                         (int)((rec.hdr.timestamp) % 1000ULL),
+            n = snprintf(tmp, sizeof(tmp), "[%05d.%06d] %s > %s\n",
+                         (int)(rec.hdr.timestamp / 1000000ULL),
+                         (int)((rec.hdr.timestamp) % 1000000ULL),
                          name, rec.data);
             if (n > (int)sizeof(tmp)) {
                 n = sizeof(tmp);

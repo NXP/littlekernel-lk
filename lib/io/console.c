@@ -76,21 +76,22 @@ void __kernel_console_write(const char* str, size_t len)
     }
 }
 
-static spin_lock_t dputc_spin_lock = 0;
 
 void __kernel_serial_write(const char* str, size_t len)
 {
+#if WITH_LIB_DEBUGLOG
+    static spin_lock_t dputc_spin_lock = 0;
+
     spin_lock_saved_state_t state;
     spin_lock_irqsave(&dputc_spin_lock, state);
 
     /* write out the serial port */
-#ifdef USE_DPUTS_IRQ
     platform_dputs_irq(str, len);
+
+    spin_unlock_irqrestore(&dputc_spin_lock, state);
 #else
     platform_dputs(str, len);
 #endif
-
-    spin_unlock_irqrestore(&dputc_spin_lock, state);
 }
 
 void register_print_callback(print_callback_t *cb)

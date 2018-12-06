@@ -33,6 +33,12 @@ status_t cond_wait_timeout(cond_t *cond, mutex_t *mutex, lk_time_t timeout);
 void cond_signal(cond_t *cond);
 void cond_broadcast(cond_t *cond);
 
+static inline status_t cond_wait(cond_t *cond, mutex_t *mutex)
+{
+    return cond_wait_timeout(cond, mutex, INFINITE_TIME);
+}
+
+
 __END_CDECLS;
 
 #endif

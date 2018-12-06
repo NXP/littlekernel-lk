@@ -24,6 +24,7 @@
 #include <compiler.h>
 #include <debug.h>
 #include <trace.h>
+#include <kernel/mutex.h>
 
 /* Default implementation of panic time getc/putc.
  * Just calls through to the underlying dputc/dgetc implementation
@@ -37,4 +38,25 @@ __WEAK void platform_pputc(char c)
 __WEAK int platform_pgetc(char *c, bool wait)
 {
     return platform_dgetc(c, wait);
+}
+
+__WEAK void platform_dputs(const char* str, size_t len)
+{
+    unsigned i;
+    for (i = 0; i < len; i++)
+        platform_pputc(str[i]);
+}
+
+static mutex_t dputs_lock = MUTEX_INITIAL_VALUE(dputs_lock);
+__WEAK void platform_dputs_thread(const char* str, size_t len)
+{
+
+    mutex_acquire(&dputs_lock);
+    platform_dputs(str, len);
+    mutex_release(&dputs_lock);
+}
+
+__WEAK void platform_dputs_irq(const char* str, size_t len)
+{
+    platform_dputs(str, len);
 }

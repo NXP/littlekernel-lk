@@ -302,7 +302,7 @@ static inline int cgetchar(void)
 
 static inline void cputchar(char c)
 {
-    platform_dputc(c);
+    platform_dputs_thread(&c, 1);
 }
 
 static inline void cputs(const char* s)

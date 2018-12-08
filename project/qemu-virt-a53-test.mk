@@ -2,6 +2,9 @@
 MODULES += \
 	app/shell
 
+MODULES += lib/debuglog
+WITH_DEBUG_LINEBUFFER=true
+
 include project/virtual/test.mk
 include project/virtual/fs.mk
 include project/virtual/minip.mk

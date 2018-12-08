@@ -91,13 +91,7 @@ int getc(FILE *fp)
 
 int getchar(void)
 {
-    char c;
-    int err = platform_dgetc(&c, true);
-    if (err < 0) {
-        return err;
-    } else {
-        return c;
-    }
+    return getc(stdin);
 }
 
 static int _fprintf_output_func(const char *str, size_t len, void *state)

@@ -295,9 +295,13 @@ static const cmd *match_command(const char *command, const uint8_t availability_
 
 static inline int cgetchar(void)
 {
+#ifdef CONSOLE_USE_DGETC
     char c;
     int r = platform_dgetc(&c, true);
     return (r < 0) ? r : c;
+#else
+    return getchar();
+#endif
 }
 
 static inline void cputchar(char c)

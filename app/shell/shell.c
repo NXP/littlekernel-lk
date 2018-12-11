@@ -37,5 +37,8 @@ static void shell_entry(const struct app_descriptor *app, void *args)
 APP_START(shell)
 .init = shell_init,
  .entry = shell_entry,
+#ifdef SHELL_WITH_NO_AUTOSTART
+ .flags = APP_FLAG_DONT_START_ON_BOOT,
+#endif
   APP_END
 

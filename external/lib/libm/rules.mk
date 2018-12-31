@@ -1,3 +1,6 @@
+ifdef USE_OPENLIBM
+$(info use openlib)
+else
 LOCAL_DIR := $(GET_LOCAL_DIR)
 
 MODULE := $(LOCAL_DIR)
@@ -42,3 +45,5 @@ MODULE_SRCS += \
 	$(LOCAL_DIR)/e_atan2.c \
 
 include make/module.mk
+
+endif

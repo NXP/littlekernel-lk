@@ -9,6 +9,7 @@ MODULE_SRCS += \
 	$(LOCAL_DIR)/class/i2c_api.c \
 	$(LOCAL_DIR)/class/spi_api.c \
 	$(LOCAL_DIR)/class/sai_api.c \
+	$(LOCAL_DIR)/class/spdif_api.c \
 	$(LOCAL_DIR)/class/uart_api.c \
 	$(LOCAL_DIR)/class/fb_api.c \
 	$(LOCAL_DIR)/class/netif_api.c \

@@ -58,6 +58,8 @@ struct driver_ops {
     status_t (*init)(struct device *dev);
     status_t (*fini)(struct device *dev);
 
+    status_t (*ioctl)(struct device *dev, int request, void *argp);
+
     status_t (*suspend)(struct device *dev);
     status_t (*resume)(struct device *dev);
 };
@@ -109,6 +111,8 @@ status_t device_fini_all(void);
 
 status_t device_init(struct device *dev);
 status_t device_fini(struct device *dev);
+
+status_t device_ioctl(struct device *dev, int request, void *argp);
 
 status_t device_suspend(struct device *dev);
 status_t device_resume(struct device *dev);

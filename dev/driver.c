@@ -101,6 +101,21 @@ status_t device_fini(struct device *dev)
         return ERR_NOT_SUPPORTED;
 }
 
+status_t device_ioctl(struct device *dev, int request, void *argp)
+{
+    if ((!dev) || (!request) || (!argp))
+        return ERR_INVALID_ARGS;
+
+    DEBUG_ASSERT(dev->driver);
+
+    const struct driver_ops *ops = dev->driver->ops;
+
+    if (ops && ops->ioctl)
+        return ops->ioctl(dev, request, argp);
+    else
+        return ERR_NOT_SUPPORTED;
+}
+
 status_t device_suspend(struct device *dev)
 {
     if (!dev)

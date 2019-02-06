@@ -37,6 +37,12 @@ struct device {
     const char *name;
     const struct driver *driver;
 
+    /* node to dynamic created device list */
+    struct list_node node;
+
+    /* FDT node offset (if applicable) */
+    int node_offset;
+
     /* instance specific config data populated at instantiation */
     const void *config;
 
@@ -68,6 +74,7 @@ struct driver_ops {
 struct driver {
     const char *type;
     const struct driver_ops *ops;
+    size_t prv_cfg_sz;
 };
 
 /* macro-expanding concat */
@@ -80,6 +87,16 @@ struct driver {
         .type = #type_, \
         .ops = ops_, \
     }
+
+#define DRIVER_EXPORT_WITH_CFG(type_, ops_, private_config_sz_) \
+    const struct driver concat(__driver_, type_) \
+        __ALIGNED(sizeof(void *)) __SECTION(".drivers") = { \
+        .type = #type_, \
+        .ops = ops_, \
+        .private_config_size = private_config_sz_, \
+    }
+
+
 
 #define DEVICE_INSTANCE(type_, name_, config_) \
     extern struct driver concat(__driver_, type_); \

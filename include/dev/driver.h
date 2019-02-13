@@ -71,10 +71,17 @@ struct driver_ops {
 };
 
 /* describes a driver, one per driver type */
+#define DRIVER_INIT_CORE        (1UL << 0U)
+#define DRIVER_INIT_PLATFORM    (1UL << 4U)
+#define DRIVER_INIT_TARGET      (1UL << 8U)
+#define DRIVER_INIT_HAL         (1UL << 12U)
+#define DRIVER_INIT_APP         (1UL << 16U)
+
 struct driver {
     const char *type;
     const struct driver_ops *ops;
     size_t prv_cfg_sz;
+    unsigned initlvl;
 };
 
 /* macro-expanding concat */
@@ -86,6 +93,15 @@ struct driver {
         __ALIGNED(sizeof(void *)) __SECTION(".drivers") = { \
         .type = #type_, \
         .ops = ops_, \
+        .initlvl = DRIVER_INIT_CORE, \
+    }
+
+#define DRIVER_EXPORT_WITH_LVL(type_, ops_, initlvl_) \
+    const struct driver concat(__driver_, type_) \
+        __ALIGNED(sizeof(void *)) __SECTION(".drivers") = { \
+        .type = #type_, \
+        .ops = ops_, \
+        .initlvl = initlvl_, \
     }
 
 #define DRIVER_EXPORT_WITH_CFG(type_, ops_, private_config_sz_) \

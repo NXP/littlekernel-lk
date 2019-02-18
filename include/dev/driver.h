@@ -93,7 +93,7 @@ struct driver {
         __ALIGNED(sizeof(void *)) __SECTION(".drivers") = { \
         .type = #type_, \
         .ops = ops_, \
-        .initlvl = DRIVER_INIT_CORE, \
+        .initlvl = DRIVER_INIT_PLATFORM, \
     }
 
 #define DRIVER_EXPORT_WITH_LVL(type_, ops_, initlvl_) \
@@ -109,10 +109,17 @@ struct driver {
         __ALIGNED(sizeof(void *)) __SECTION(".drivers") = { \
         .type = #type_, \
         .ops = ops_, \
-        .private_config_size = private_config_sz_, \
+        .prv_cfg_sz = private_config_sz_, \
     }
 
-
+#define DRIVER_EXPORT_WITH_CFG_LVL(type_, ops_, initlvl_, private_config_sz_) \
+    const struct driver concat(__driver_, type_) \
+        __ALIGNED(sizeof(void *)) __SECTION(".drivers") = { \
+        .type = #type_, \
+        .ops = ops_, \
+        .initlvl = initlvl_, \
+        .prv_cfg_sz = private_config_sz_, \
+    }
 
 #define DEVICE_INSTANCE(type_, name_, config_) \
     extern struct driver concat(__driver_, type_); \

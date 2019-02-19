@@ -44,7 +44,7 @@
 #define CONSOLE_ENABLE_REPEAT 1
 #endif
 
-#define LINE_LEN 128
+#define LINE_LEN 256
 
 #define PANIC_LINE_LEN 32
 

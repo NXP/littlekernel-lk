@@ -22,6 +22,8 @@ MODULE_SRCS += \
 	$(LOCAL_DIR)/class/dac_api.c \
 	$(LOCAL_DIR)/class/asrc_api.c
 
+MODULE_DEPS += lib/appargs
+
 EXTRA_LINKER_SCRIPTS += $(LOCAL_DIR)/devices.ld $(LOCAL_DIR)/drivers.ld
 
 include make/module.mk

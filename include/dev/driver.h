@@ -75,6 +75,7 @@ struct driver_ops {
 #define DRIVER_INIT_PLATFORM    (1UL << 4U)
 #define DRIVER_INIT_TARGET      (1UL << 8U)
 #define DRIVER_INIT_HAL         (1UL << 12U)
+#define DRIVER_INIT_HAL_VENDOR  (1UL << 14U)
 #define DRIVER_INIT_APP         (1UL << 16U)
 
 struct driver {

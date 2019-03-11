@@ -28,9 +28,10 @@
 #include <stdbool.h>
 
 __BEGIN_CDECLS;
-
+#ifndef containerof
 #define containerof(ptr, type, member) \
     ((type *)((addr_t)(ptr) - offsetof(type, member)))
+#endif
 
 struct list_node {
     struct list_node *prev;

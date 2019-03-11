@@ -134,9 +134,8 @@
 
 #define __offsetof(type, field) __builtin_offsetof(type, field)
 
-#define container_of(ptr, type, member) ({          \
-    const typeof(((type *)0)->member)*__mptr = (ptr);    \
-        ∙   ∙(type *)((char *)__mptr - offsetof(type, member)); })
+#define containerof(ptr, type, member) \
+    ((type *)((addr_t)(ptr) - offsetof(type, member)))
 
 #else
 

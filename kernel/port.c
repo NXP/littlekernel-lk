@@ -47,7 +47,7 @@
 #define PORTGROUP_MAGIC (0x70727467)  // 'prtg'
 
 #define PORT_BUFF_SIZE      8
-#define PORT_BUFF_SIZE_BIG 64
+#define PORT_BUFF_SIZE_BIG 512
 
 #define RESCHEDULE_POLICY 1
 
@@ -338,7 +338,7 @@ status_t port_group_add(port_t group, port_t port)
     } else {
         rp->gport = pg;
         list_add_tail(&pg->rp_list, &rp->g_node);
-        
+
         // If the new read port being added has messages available, try to wake
         // any readers that might be present.
         if (!buf_is_empty(rp->buf)) {

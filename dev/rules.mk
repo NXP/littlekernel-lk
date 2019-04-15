@@ -15,6 +15,7 @@ MODULE_SRCS += \
 	$(LOCAL_DIR)/class/fb_api.c \
 	$(LOCAL_DIR)/class/netif_api.c \
 	$(LOCAL_DIR)/class/gpt_api.c \
+	$(LOCAL_DIR)/class/sdma_api.c \
 	$(LOCAL_DIR)/class/hdmi_api.c \
 	$(LOCAL_DIR)/class/dac_api.c
 

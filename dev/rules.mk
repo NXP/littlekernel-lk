@@ -10,6 +10,7 @@ MODULE_SRCS += \
 	$(LOCAL_DIR)/class/spi_api.c \
 	$(LOCAL_DIR)/class/sai_api.c \
 	$(LOCAL_DIR)/class/spdif_api.c \
+        $(LOCAL_DIR)/class/pdm_api.c \
 	$(LOCAL_DIR)/class/gpio_api.c \
 	$(LOCAL_DIR)/class/uart_api.c \
 	$(LOCAL_DIR)/class/fb_api.c \

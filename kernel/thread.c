@@ -1039,18 +1039,53 @@ void dump_thread(thread_t *t)
  */
 void dump_all_threads(void)
 {
-    thread_t *t;
 
-    THREAD_LOCK(state);
+    spin_lock_saved_state_t state;
+    thread_t *t, *t_cpy, *t_all;
+    unsigned nr_threads = 0;
+    bool not_enough = false;
+
+    struct list_node thread_list_cpy;
+    list_initialize(&thread_list_cpy);
+
+    spin_lock_irqsave(&thread_lock, state);
     list_for_every_entry(&thread_list, t, thread_t, thread_list_node) {
         if (t->magic != THREAD_MAGIC) {
-            dprintf(INFO, "bad magic on thread struct %p, aborting.\n", t);
-            hexdump(t, sizeof(thread_t));
-            break;
+            continue;
         }
+        nr_threads++;
+    }
+    spin_unlock_irqrestore(&thread_lock, state);
+
+    nr_threads += 64;
+    t_all = malloc(nr_threads * sizeof(thread_t));
+    if (t_all == NULL)
+        return;
+
+    t_cpy = t_all;
+
+    spin_lock_irqsave(&thread_lock, state);
+    list_for_every_entry(&thread_list, t, thread_t, thread_list_node) {
+        if (t->magic != THREAD_MAGIC) {
+            continue;
+        }
+        memcpy(t_cpy, t, sizeof(thread_t));
+        list_add_head(&thread_list_cpy, &t_cpy->thread_list_node);
+        t_cpy++;
+       if (--nr_threads == 0) {
+           not_enough = true;
+           break;
+       }
+    }
+    spin_unlock_irqrestore(&thread_lock, state);
+
+    list_for_every_entry(&thread_list_cpy, t, thread_t, thread_list_node) {
         dump_thread(t);
     }
-    THREAD_UNLOCK(state);
+
+    free(t_all);
+    if (not_enough)
+        printf("All threads were not printed. Increase number of threads (nr_threads).\n");
 }
 
 /** @} */

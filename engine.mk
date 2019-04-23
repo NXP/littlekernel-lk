@@ -76,6 +76,8 @@ ARCH_ASMFLAGS :=
 # top level rule
 all:: $(OUTBIN) $(OUTELF).lst $(OUTELF).debug.lst $(OUTELF).sym $(OUTELF).sym.sorted $(OUTELF).size $(OUTELF).dump $(BUILDDIR)/srcfiles.txt $(BUILDDIR)/include_paths.txt
 
+bin:: $(OUTBIN)
+
 # master module object list
 ALLOBJS_MODULE :=
 

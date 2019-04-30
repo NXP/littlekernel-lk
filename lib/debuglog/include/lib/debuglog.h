@@ -73,6 +73,7 @@ void dlog_reader_init(dlog_reader_t* rdr, void (*notify)(void*), void* cookie);
 void dlog_reader_destroy(dlog_reader_t* rdr);
 status_t dlog_write(uint32_t flags, const void* ptr, size_t len);
 status_t dlog_read(dlog_reader_t* rdr, uint32_t flags, void* ptr, size_t len, size_t* actual);
+void dlog_flush(void);
 
 void dlog_bypass_init_early(void);
 void dlog_bypass_init(void);

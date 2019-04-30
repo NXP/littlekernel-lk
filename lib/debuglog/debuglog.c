@@ -63,6 +63,7 @@ bool dlog_bypass(void) {
 void dlog_panic(void)
 {
     DLOG.panic = true;
+    dlog_bypass_ = true;
 }
 
 // The debug log maintains a circular buffer of debug log records,
@@ -301,43 +302,71 @@ static void debuglog_dumper_notify(void* cookie) {
 
 static event_t dumper_event = EVENT_INITIAL_VALUE(dumper_event, 0, EVENT_FLAG_AUTOUNSIGNAL);
 
-static int debuglog_dumper(void* arg) {
-    // assembly buffer with room for log text plus header text
-    char tmp[DLOG_MAX_DATA + 128];
+static dlog_reader_t reader;
+// assembly buffer with room for log text plus header text
+static char dlog_buffer[DLOG_MAX_DATA + 128];
+
+static bool dlog_get_item(char **buffer, size_t *len)
+{
+    size_t actual;
+    status_t ret;
 
     struct {
         dlog_header_t hdr;
         char data[DLOG_MAX_DATA + 1];
     } rec;
 
-    dlog_reader_t reader;
+
+    ret = dlog_read(&reader, 0, &rec, DLOG_MAX_RECORD, &actual);
+    if (ret != 0)
+        return false;
+
+    if (rec.hdr.datalen && (rec.data[rec.hdr.datalen - 1] == '\n')) {
+        rec.data[rec.hdr.datalen - 1] = 0;
+    } else {
+        rec.data[rec.hdr.datalen] = 0;
+    }
+    int n;
+    const char *name = "unknown";
+    if (rec.hdr.tid)
+        name = ((thread_t*)(rec.hdr.tid))->name;
+    n = snprintf(dlog_buffer, sizeof(dlog_buffer), "[%05d.%06d] %s > %s\n",
+                 (int)(rec.hdr.timestamp / 1000000ULL),
+                 (int)((rec.hdr.timestamp) % 1000000ULL),
+                 name, rec.data);
+    if (n > (int)sizeof(dlog_buffer)) {
+        n = sizeof(dlog_buffer);
+    }
+
+    *len = n;
+    *buffer = dlog_buffer;
+
+    return true;
+}
+
+void dlog_flush(void)
+{
+    char *tmp;
+    size_t n;
+
+    while (true) {
+        bool has_data = dlog_get_item(&tmp, &n);
+        if (has_data == false)
+            break;
+        size_t n = strlen(tmp);
+        __kernel_console_write(tmp, n);
+        dlog_serial_write(tmp, n);
+    }
+}
+
+
+static int debuglog_dumper(void* arg) {
+
     dlog_reader_init(&reader, debuglog_dumper_notify, &dumper_event);
 
     for (;;) {
         event_wait(&dumper_event);
-
-        // dump records to kernel console
-        size_t actual;
-        while (dlog_read(&reader, 0, &rec, DLOG_MAX_RECORD, &actual) == 0) {
-            if (rec.hdr.datalen && (rec.data[rec.hdr.datalen - 1] == '\n')) {
-                rec.data[rec.hdr.datalen - 1] = 0;
-            } else {
-                rec.data[rec.hdr.datalen] = 0;
-            }
-            int n;
-            const char *name = "unknown";
-            if (rec.hdr.tid)
-                name = ((thread_t*)(rec.hdr.tid))->name;
-            n = snprintf(tmp, sizeof(tmp), "[%05d.%06d] %s > %s\n",
-                         (int)(rec.hdr.timestamp / 1000000ULL),
-                         (int)((rec.hdr.timestamp) % 1000000ULL),
-                         name, rec.data);
-            if (n > (int)sizeof(tmp)) {
-                n = sizeof(tmp);
-            }
-            __kernel_console_write(tmp, n);
-            dlog_serial_write(tmp, n);
-        }
+        dlog_flush();
     }
 
     return 0;

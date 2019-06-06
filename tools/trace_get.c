@@ -28,7 +28,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 
-#define RPMSG_PATH  "/dev/rpmsg-bin"
+#define RPMSG_PATH  "/dev/lktraces"
 #define PAGE_SIZE   4096
 
 int main(int argc, char *argv[])

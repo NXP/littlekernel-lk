@@ -50,6 +50,7 @@ void cbuf_initialize_etc(cbuf_t *cbuf, size_t len, void *buf)
     cbuf->tail = 0;
     cbuf->len_pow2 = log2_uint(len);
     cbuf->buf = buf;
+    cbuf->no_event = false;
     event_init(&cbuf->event, false, 0);
     spin_lock_init(&cbuf->lock);
 
@@ -115,7 +116,7 @@ size_t cbuf_write(cbuf_t *cbuf, const void *_buf, size_t len, bool canreschedule
         pos += write_len;
     }
 
-    if (cbuf->head != cbuf->tail)
+    if (!cbuf->no_event && cbuf->head != cbuf->tail)
         event_signal(&cbuf->event, false);
 
     spin_unlock_irqrestore(&cbuf->lock, state);
@@ -136,7 +137,7 @@ size_t cbuf_read(cbuf_t *cbuf, void *_buf, size_t buflen, bool block)
 retry:
     // block on the cbuf outside of the lock, which may
     // unblock us early and we'll have to double check below
-    if (block)
+    if (!cbuf->no_event && block)
         event_wait(&cbuf->event);
 
     spin_lock_saved_state_t state;
@@ -168,7 +169,7 @@ retry:
             pos += read_len;
         }
 
-        if (cbuf->tail == cbuf->head) {
+        if (!cbuf->no_event && cbuf->tail == cbuf->head) {
             DEBUG_ASSERT(pos > 0);
             // we've emptied the buffer, unsignal the event
             event_unsignal(&cbuf->event);
@@ -228,7 +229,7 @@ size_t cbuf_write_char(cbuf_t *cbuf, char c, bool canreschedule)
         cbuf->head = INC_POINTER(cbuf, cbuf->head, 1);
         ret = 1;
 
-        if (cbuf->head != cbuf->tail)
+        if (!cbuf->no_event && cbuf->head != cbuf->tail)
             event_signal(&cbuf->event, canreschedule);
     }
 
@@ -243,7 +244,7 @@ size_t cbuf_read_char(cbuf_t *cbuf, char *c, bool block)
     DEBUG_ASSERT(c);
 
 retry:
-    if (block)
+    if (!cbuf->no_event && block)
         event_wait(&cbuf->event);
 
     spin_lock_saved_state_t state;
@@ -256,7 +257,7 @@ retry:
         *c = cbuf->buf[cbuf->tail];
         cbuf->tail = INC_POINTER(cbuf, cbuf->tail, 1);
 
-        if (cbuf->tail == cbuf->head) {
+        if (!cbuf->no_event && cbuf->tail == cbuf->head) {
             // we've emptied the buffer, unsignal the event
             event_unsignal(&cbuf->event);
         }

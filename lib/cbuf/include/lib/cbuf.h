@@ -37,6 +37,7 @@ typedef struct cbuf {
     char *buf;
     event_t event;
     spin_lock_t lock;
+    bool no_event;
 } cbuf_t;
 
 /**

@@ -40,6 +40,9 @@
 #include <err.h>
 #include <platform.h>
 
+#include <kernel/trace/tp_debug.h>
+#include <kernel/trace/tracelog.h>
+
 #if WITH_LIB_CONSOLE
 #include <lib/console.h>
 
@@ -57,7 +60,9 @@ STATIC_COMMAND("threadstats", "thread level statistics", &cmd_threadstats)
 STATIC_COMMAND("threadload", "toggle thread load display", &cmd_threadload)
 #endif
 #if WITH_KERNEL_EVLOG
+#if !WITH_KERNEL_TRACEPOINT
 STATIC_COMMAND_MASKED("kevlog", "dump kernel event log", &cmd_kevlog, CMD_AVAIL_ALWAYS)
+#endif
 #endif
 STATIC_COMMAND_END(kernel);
 
@@ -168,6 +173,20 @@ static int cmd_threadload(int argc, const cmd_args *argv)
 
 #endif // WITH_LIB_CONSOLE
 
+#if WITH_KERNEL_TRACEPOINT
+
+void probe_subsys_kernel_ev(uintptr_t id, uintptr_t arg0, uintptr_t arg1)
+{
+    tracelog_write(TRACELOG_SET_TYPE(TRACELOG_TYPE_KERNEL, id), (void *) arg0, (void *) arg1);
+}
+
+void kernel_evlog_init(void)
+{
+    register_trace_subsys_kernel_ev(probe_subsys_kernel_ev, false);
+}
+
+#else
+
 #if WITH_KERNEL_EVLOG
 
 #include <lib/evlog.h>
@@ -240,3 +259,5 @@ static int cmd_kevlog(int argc, const cmd_args *argv)
 #endif
 
 #endif // WITH_KERNEL_EVLOG
+
+#endif

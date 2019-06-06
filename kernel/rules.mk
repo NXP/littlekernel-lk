@@ -26,6 +26,11 @@ else
 MODULE_DEPS += kernel/novm
 endif
 
+ifeq ($(WITH_KERNEL_TRACEPOINT),1)
+MODULE_DEPS += lib/cbuf
+MODULE_DEPS += kernel/trace
+endif
+
 ifeq ($(WITH_DYNAMIC_DEBUG),1)
 MODULE_DEPS += kernel/dyndbg
 endif

@@ -57,6 +57,7 @@ SECTIONS
         KEEP(*(.rodata.fault_handler_table))
         __fault_handler_table_end = .;
         *(.rodata .rodata.* .gnu.linkonce.r.*)
+        *(__tracepoints_strings)
     }
 
     /*
@@ -74,6 +75,10 @@ SECTIONS
         /* in one segment binaries, the rom data address is on top of the ram data address */
         __data_start = .;
         *(.data .data.* .gnu.linkonce.d.*)
+        . = ALIGN(8);
+        __start___tracepoints = .;
+        *(__tracepoints)
+        __stop___tracepoints = .;
     }
 
     .ctors : ALIGN(8) {

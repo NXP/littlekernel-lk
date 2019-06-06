@@ -14,4 +14,4 @@ mkimage: $(MKIMAGE_SRCS) $(MKIMAGE_DEPS)
 	gcc -Wall -g -o $@ $(MKIMAGE_INCS) $(MKIMAGE_SRCS)
 
 clean::
-	rm -f lkboot mkimage
+	rm -f lkboot mkimage trace_get

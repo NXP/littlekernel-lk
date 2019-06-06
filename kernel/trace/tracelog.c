@@ -37,8 +37,10 @@
 
 #include <ivshmem-endpoint.h>
 #include <cipc.h>
+#include <trace.h>
 
 //#define CHECK_PAYLOAD
+#define LOCAL_TRACE 0
 
 #ifdef CHECK_PAYLOAD
 #define CBUF_SIZE   (1 << 20)
@@ -121,8 +123,9 @@ void tracelog_flush(void)
 
     for (cpu = 0; cpu < CPUS_NUM; cpu++) {
         count = cbuf_read(&ring[cpu].cbuf, flush_store, CBUF_SIZE, 0);
-        cipc_write_buf(IVSHM_EP_ID_BINARY, flush_store, count);
+        cipc_write_buf(IVSHM_EP_ID_LKTRACES, flush_store, count);
 
+        LTRACEF("cpu %d: Send %ld bytes\n", cpu, count);
 #ifdef CHECK_PAYLOAD
         {
             size_t off = 0;
@@ -144,7 +147,7 @@ void tracelog_flush(void)
 static int tracelog_flush_thread(void *arg)
 {
     while (1) {
-        thread_sleep(1000);
+        thread_sleep(50);
         tracelog_flush();
     }
 
@@ -175,7 +178,11 @@ static void cmd_do_start_flush(void)
 {
     thread_t *t;
 
-    t = thread_create("tracelog-flush", &tracelog_flush_thread, NULL, LOW_PRIORITY, DEFAULT_STACK_SIZE);
+    t = thread_create("tracelog-flush",
+                      &tracelog_flush_thread,
+                      NULL,
+                      LOW_PRIORITY,
+                      DEFAULT_STACK_SIZE);
     thread_detach_and_resume(t);
 }
 
@@ -221,6 +228,8 @@ static int cmd_tracelog(int argc, const cmd_args *argv)
 usage:
         printf("%s list: view tracepoint events list\n", argv[0].str);
         printf("%s start_flush: start flush thread\n", argv[0].str);
+        printf("%s flush: Flush tracelog buffer\n", argv[0].str);
+
         return ERR_GENERIC;
     }
 

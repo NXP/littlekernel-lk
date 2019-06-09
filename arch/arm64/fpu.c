@@ -29,22 +29,8 @@
 
 static struct fpstate *current_fpstate[SMP_MAX_CPUS];
 
-static void arm64_fpu_load_state(struct thread *t)
+inline void _arm64_fpu_load_state(struct fpstate *fpstate)
 {
-    uint cpu = arch_curr_cpu_num();
-    struct fpstate *fpstate = &t->arch.fpstate;
-
-    if (fpstate == current_fpstate[cpu] && fpstate->current_cpu == cpu) {
-        LTRACEF("cpu %d, thread %s, fpstate already valid\n", cpu, t->name);
-        return;
-    }
-    LTRACEF("cpu %d, thread %s, load fpstate %p, last cpu %d, last fpstate %p\n",
-            cpu, t->name, fpstate, fpstate->current_cpu, current_fpstate[cpu]);
-    fpstate->current_cpu = cpu;
-    current_fpstate[cpu] = fpstate;
-
-
-    STATIC_ASSERT(sizeof(fpstate->regs) == 16 * 32);
     __asm__ volatile("ldp     q0, q1, [%0, #(0 * 32)]\n"
                      "ldp     q2, q3, [%0, #(1 * 32)]\n"
                      "ldp     q4, q5, [%0, #(2 * 32)]\n"
@@ -66,9 +52,28 @@ static void arm64_fpu_load_state(struct thread *t)
                      :: "r"(fpstate), "r"(fpstate->fpcr), "r"(fpstate->fpsr));
 }
 
-void arm64_fpu_save_state(struct thread *t)
+static void arm64_fpu_load_state(struct thread *t)
 {
+    uint cpu = arch_curr_cpu_num();
     struct fpstate *fpstate = &t->arch.fpstate;
+
+    if (fpstate == current_fpstate[cpu] && fpstate->current_cpu == cpu) {
+        LTRACEF("cpu %d, thread %s, fpstate already valid\n", cpu, t->name);
+        return;
+    }
+    LTRACEF("cpu %d, thread %s, load fpstate %p, last cpu %d, last fpstate %p\n",
+            cpu, t->name, fpstate, fpstate->current_cpu, current_fpstate[cpu]);
+    fpstate->current_cpu = cpu;
+    current_fpstate[cpu] = fpstate;
+
+
+    STATIC_ASSERT(sizeof(fpstate->regs) == 16 * 32);
+
+    _arm64_fpu_load_state(fpstate);
+}
+
+inline void _arm64_fpu_save_state(struct fpstate *fpstate)
+{
     __asm__ volatile("stp     q0, q1, [%2, #(0 * 32)]\n"
                      "stp     q2, q3, [%2, #(1 * 32)]\n"
                      "stp     q4, q5, [%2, #(2 * 32)]\n"
@@ -89,6 +94,13 @@ void arm64_fpu_save_state(struct thread *t)
                      "mrs     %1, fpsr\n"
                      : "=r"(fpstate->fpcr), "=r"(fpstate->fpsr)
                      : "r"(fpstate));
+}
+
+void arm64_fpu_save_state(struct thread *t)
+{
+    struct fpstate *fpstate = &t->arch.fpstate;
+
+    _arm64_fpu_save_state(fpstate);
 
     LTRACEF("thread %s, fpcr %x, fpsr %x\n", t->name, fpstate->fpcr, fpstate->fpsr);
 }
@@ -104,4 +116,38 @@ void arm64_fpu_exception(struct arm64_iframe_long *iframe)
             arm64_fpu_load_state(t);
         return;
     }
+}
+
+struct iframe;
+extern enum handler_return platform_irq(struct iframe *frame);
+extern enum handler_return platform_fiq(struct iframe *frame);
+
+enum handler_return arm64_platform_irq(struct iframe *frame)
+{
+    struct fpstate fpstate;
+    uint32_t cpacr = ARM64_READ_SYSREG(cpacr_el1);
+    ARM64_WRITE_SYSREG(cpacr_el1, (cpacr | (3 << 20)));
+    _arm64_fpu_save_state(&fpstate);
+
+    enum handler_return ret = platform_irq(frame);
+
+    _arm64_fpu_load_state(&fpstate);
+    ARM64_WRITE_SYSREG(cpacr_el1, cpacr);
+
+    return ret;
+}
+
+enum handler_return arm64_platform_fiq(struct iframe *frame)
+{
+    struct fpstate fpstate;
+    uint32_t cpacr = ARM64_READ_SYSREG(cpacr_el1);
+    ARM64_WRITE_SYSREG(cpacr_el1, (cpacr | (3 << 20)));
+    _arm64_fpu_save_state(&fpstate);
+
+    enum handler_return ret = platform_fiq(frame);
+
+    _arm64_fpu_load_state(&fpstate);
+    ARM64_WRITE_SYSREG(cpacr_el1, cpacr);
+
+    return ret;
 }

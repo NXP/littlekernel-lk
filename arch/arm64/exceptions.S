@@ -126,7 +126,7 @@ add sp, sp, #32
     regsave_short
     msr daifclr, #1 /* reenable fiqs once elr and spsr have been saved */
     mov x0, sp
-    bl  platform_irq
+    bl  arm64_platform_irq
     cbz x0, .Lirq_exception_no_preempt\@
     bl  thread_preempt
 .Lirq_exception_no_preempt\@:
@@ -168,7 +168,7 @@ LOCAL_FUNCTION(arm64_irq_current_el_SPx)
 LOCAL_FUNCTION(arm64_fiq_current_el_SPx)
     regsave_short
     mov x0, sp
-    bl  platform_fiq
+    bl  arm64_platform_fiq
     b  arm64_exc_shared_restore_short
 
 .org 0x380
@@ -191,7 +191,7 @@ LOCAL_FUNCTION(arm64_irq_lower_el_64)
 LOCAL_FUNCTION(arm64_fiq_lower_el_64)
     regsave_short
     mov x0, sp
-    bl  platform_fiq
+    bl  arm64_platform_fiq
     b  arm64_exc_shared_restore_short
 
 .org 0x580
@@ -214,7 +214,7 @@ LOCAL_FUNCTION(arm64_irq_lower_el_32)
 LOCAL_FUNCTION(arm64_fiq_lower_el_32)
     regsave_short
     mov x0, sp
-    bl  platform_fiq
+    bl  arm64_platform_fiq
     b  arm64_exc_shared_restore_short
 
 .org 0x780

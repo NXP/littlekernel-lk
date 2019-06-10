@@ -996,8 +996,8 @@ void dump_thread(thread_t *t)
 {
     dprintf(INFO, "dump_thread: t %p (%s)\n", t, t->name);
 #if WITH_SMP
-    dprintf(INFO, "\tstate %s, curr_cpu %d, pinned_cpu %d, priority %d, remaining quantum %d\n",
-            thread_state_to_str(t->state), t->curr_cpu, t->pinned_cpu, t->priority, t->remaining_quantum);
+    dprintf(INFO, "\tstate %s, curr_cpu %d, pinned_cpu %d, priority %d, remaining quantum %d %s\n",
+            thread_state_to_str(t->state), t->curr_cpu, t->pinned_cpu, t->priority, t->remaining_quantum, t->flags & THREAD_FLAG_REAL_TIME? "realtime":"");
 #else
     dprintf(INFO, "\tstate %s, priority %d, remaining quantum %d\n",
             thread_state_to_str(t->state), t->priority, t->remaining_quantum);

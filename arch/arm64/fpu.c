@@ -134,6 +134,8 @@ enum handler_return arm64_platform_irq(struct iframe *frame)
     _arm64_fpu_load_state(&fpstate);
     ARM64_WRITE_SYSREG(cpacr_el1, cpacr);
 
+    smp_wmb();
+
     return ret;
 }
 
@@ -148,6 +150,8 @@ enum handler_return arm64_platform_fiq(struct iframe *frame)
 
     _arm64_fpu_load_state(&fpstate);
     ARM64_WRITE_SYSREG(cpacr_el1, cpacr);
+
+    smp_wmb();
 
     return ret;
 }

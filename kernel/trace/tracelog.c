@@ -34,6 +34,7 @@
 #include <kernel/trace/tracelog_str.h>
 #include <kernel/trace/tracelog_bin.h>
 #include <kernel/trace/tracelog_kernel.h>
+#include <tracelog_af.h>
 
 #include <ivshmem-endpoint.h>
 #include <cipc.h>
@@ -60,6 +61,7 @@ static struct tracelog_hooks hooks[] = {
     [TRACELOG_TYPE_STR]     = { tracelog_str_print, tracelog_str_store, NULL },
     [TRACELOG_TYPE_KERNEL]  = { tracelog_kernel_print, tracelog_kernel_store, tracelog_kernel_no_ipc_trace },
     [TRACELOG_TYPE_BINARY]  = { tracelog_bin_print, tracelog_bin_store, NULL },
+    [TRACELOG_TYPE_AF]  = { tracelog_af_print, tracelog_af_store, NULL },
 };
 
 static uint8_t flush_store[CBUF_SIZE];

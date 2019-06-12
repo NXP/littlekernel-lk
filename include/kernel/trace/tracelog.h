@@ -38,6 +38,7 @@ enum tracelog_entry_type {
     TRACELOG_TYPE_STR,
     TRACELOG_TYPE_KERNEL,
     TRACELOG_TYPE_BINARY,
+    TRACELOG_TYPE_AF,
     TRACELOG_TYPE_NUM,
 };
 

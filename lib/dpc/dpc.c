@@ -40,27 +40,54 @@ struct dpc {
 
 static spin_lock_t dpc_lock = SPIN_LOCK_INITIAL_VALUE;
 static struct list_node dpc_list = LIST_INITIAL_VALUE(dpc_list);
+static struct list_node dpc_list_free = LIST_INITIAL_VALUE(dpc_list_free);
 static event_t dpc_event;
 
+#ifndef LK_DPC_NR_PREALLOCATED
+#define LK_DPC_NR_PREALLOCATED  128
+#endif
+
+#if defined  LK_DPC_NR_PREALLOCATED  && (LK_DPC_NR_PREALLOCATED > 0)
+#define LK_DPC_NO_MALLOC 1
+
+static struct dpc dpc_irqs[LK_DPC_NR_PREALLOCATED];
+#else
+#undef LK_DPC_NO_MALLOC
+
+#endif
+
 static int dpc_thread_routine(void *arg);
+
 
 status_t dpc_queue(dpc_callback cb, void *arg, uint flags)
 {
     struct dpc *dpc;
-
+#ifndef LK_DPC_NO_MALLOC
     dpc = malloc(sizeof(struct dpc));
 
     if (dpc == NULL)
         return ERR_NO_MEMORY;
-
-    dpc->cb = cb;
-    dpc->arg = arg;
+#endif
 
     // disable interrupts before finding lock
     spin_lock_saved_state_t state;
     spin_lock_irqsave(&dpc_lock, state);
+
+#ifdef LK_DPC_NO_MALLOC
+    dpc = list_remove_head_type(&dpc_list_free, struct dpc, node);
+    if (dpc == NULL) {
+        printf("No more DPC preallocated buffer available\n");
+        spin_unlock_irqrestore(&dpc_lock, state);
+        return ERR_NO_MEMORY;
+    }
+#endif
+
     list_add_tail(&dpc_list, &dpc->node);
+
     spin_unlock_irqrestore(&dpc_lock, state);
+
+    dpc->cb = cb;
+    dpc->arg = arg;
 
     event_signal(&dpc_event, (flags & DPC_FLAG_NORESCHED) ? false : true);
 
@@ -84,16 +111,34 @@ static int dpc_thread_routine(void *arg)
 //            dprintf("dpc calling %p, arg %p\n", dpc->cb, dpc->arg);
             dpc->cb(dpc->arg);
 
+#ifndef LK_DPC_NO_MALLOC
             free(dpc);
+#else
+            spin_lock_saved_state_t state;
+            spin_lock_irqsave(&dpc_lock, state);
+
+            list_add_tail(&dpc_list_free, &dpc->node);
+
+            spin_unlock_irqrestore(&dpc_lock, state);
+#endif
         }
     }
 
     return 0;
 }
 
+
 static void dpc_init(uint level)
 {
     event_init(&dpc_event, false, 0);
+
+#ifdef LK_DPC_NO_MALLOC
+    unsigned i;
+    for (i = 0; i < LK_DPC_NR_PREALLOCATED; i++) {
+        struct dpc *dpc = &dpc_irqs[i];
+        list_add_tail(&dpc_list_free, &dpc->node);
+    }
+#endif
 
     thread_detach_and_resume(thread_create("dpc", &dpc_thread_routine, NULL, DPC_PRIORITY, DEFAULT_STACK_SIZE));
 }

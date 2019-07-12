@@ -29,18 +29,17 @@
  *
  */
 
-#ifndef	_DEV_IOCTL_H_
-#define	_DEV_IOCTL_H_
+#ifndef	_GPR_IOCTL_H_
+#define	_GPR_IOCTL_H_
+#include <dev/dev_ioctl.h>
+#include <sys/ioctl.h>
 
-#define IOCTL_LK    0xC0
-#define IOCTL_LK_DEV(x) (IOCTL_LK | (~(IOCTL_LK) & x))
+struct gpr_ioc_cmd_reg {
+    uint32_t offset;
+    uint32_t value;
+};
+#define GPR_IOC_WRITE       _IOWR(IOCTL_DEV_GPR, 0, struct gpr_ioc_cmd_reg *)
+#define GPR_IOC_READ        _IOWR(IOCTL_DEV_GPR, 1, struct gpr_ioc_cmd_reg *)
 
-/* Little Kernel major number */
-#define IOCTL_DEV_UART      IOCTL_LK_DEV(1)
-#define IOCTL_DEV_I2C       IOCTL_LK_DEV(2)
-#define IOCTL_DEV_SAI       IOCTL_LK_DEV(3)
-#define IOCTL_DEV_SPDIF     IOCTL_LK_DEV(4)
-#define IOCTL_DEV_SPI       IOCTL_LK_DEV(5)
-#define IOCTL_DEV_GPR       IOCTL_LK_DEV(6)
 
-#endif /* DEV_IOCTL_H_ */
+#endif /* GPR_IOCTL_H_ */

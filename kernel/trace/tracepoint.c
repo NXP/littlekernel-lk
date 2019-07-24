@@ -152,7 +152,7 @@ static status_t tracepoint_entry_add_probe(struct tracepoint_entry *entry, void 
     return NO_ERROR;
 }
 
-int tracepoint_probe_register(const char *name, void *probe, int state)
+int lk_tracepoint_probe_register(const char *name, void *probe, int state)
 {
     struct tracepoint_entry *entry;
     status_t ret;

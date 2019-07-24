@@ -44,12 +44,12 @@ enum {
 
 void kernel_evlog_init(void);
 
-#define KEVLOG_THREAD_SWITCH(from, to) trace_subsys_kernel_ev(KERNEL_EVLOG_CONTEXT_SWITCH, (uintptr_t)from, (uintptr_t)to)
+#define KEVLOG_THREAD_SWITCH(from, to) lk_trace_subsys_kernel_ev(KERNEL_EVLOG_CONTEXT_SWITCH, (uintptr_t)from, (uintptr_t)to)
 #define KEVLOG_THREAD_PREEMPT(thread)
 #define KEVLOG_TIMER_TICK()
 #define KEVLOG_TIMER_CALL(ptr, arg)
-#define KEVLOG_IRQ_ENTER(irqn) trace_subsys_kernel_ev(KERNEL_EVLOG_IRQ_ENTER, (uintptr_t)irqn, 0)
-#define KEVLOG_IRQ_EXIT(irqn) trace_subsys_kernel_ev(KERNEL_EVLOG_IRQ_EXIT, (uintptr_t)irqn, 0)
+#define KEVLOG_IRQ_ENTER(irqn) lk_trace_subsys_kernel_ev(KERNEL_EVLOG_IRQ_ENTER, (uintptr_t)irqn, 0)
+#define KEVLOG_IRQ_EXIT(irqn) lk_trace_subsys_kernel_ev(KERNEL_EVLOG_IRQ_EXIT, (uintptr_t)irqn, 0)
 
 # else
 

@@ -30,13 +30,13 @@
 
 #include <kernel/trace/tracepoint.h>
 
-DEFINE_TRACE(subsys_global_printf,
+LK_DEFINE_TRACE(subsys_global_printf,
     TPPROTO(const char *str),
     TPARGS(str));
 
 #if WITH_KERNEL_TRACEPOINT
 
-static inline void trace_printf(const char *format, ...)
+static inline void lk_trace_printf(const char *format, ...)
 {
     char buffer[256] = { 0 };
     va_list args;
@@ -45,13 +45,13 @@ static inline void trace_printf(const char *format, ...)
     vsprintf(buffer, format, args);
     if (buffer[strlen(buffer) - 1] == '\n')
 	    buffer[strlen(buffer) - 1] = 0;
-    trace_subsys_global_printf(buffer);
+    lk_trace_subsys_global_printf(buffer);
     va_end(args);
 }
 
 #else
 
-static inline void trace_printf(const char *format, ...) { }
+static inline void lk_trace_printf(const char *format, ...) { }
 
 #endif
 

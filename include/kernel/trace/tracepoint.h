@@ -40,7 +40,7 @@ struct tracepoint {
 
 #if WITH_KERNEL_TRACEPOINT
 
-#define __DO_TRACE(tp, proto, args)                                             \
+#define __LK_DO_TRACE(tp, proto, args)                                          \
     do {                                                                        \
         void **it_func;                                                         \
                                                                                 \
@@ -52,36 +52,36 @@ struct tracepoint {
         }                                                                       \
     } while (0)
 
-#define DEFINE_TRACE(name, proto, args)                                         \
-    static inline void trace_##name(proto)                                      \
+#define LK_DEFINE_TRACE(name, proto, args)                                      \
+    static inline void lk_trace_##name(proto)                                   \
     {                                                                           \
-        static const char __tpstrtab_##name[]                                   \
-        __attribute__((section("__tracepoints_strings"))) = #name;              \
+        static const char __lktpstr_##name[]                                    \
+        __attribute__((section("__lk_tracepoints_strings"))) = #name;           \
                                                                                 \
-        static struct tracepoint __tracepoint_##name                            \
-        __attribute__((section("__tracepoints"), aligned(8))) =                 \
-        { __tpstrtab_##name, 0, NULL };                                         \
-        if (unlikely(__tracepoint_##name.state))                                \
-             __DO_TRACE(&__tracepoint_##name,                                   \
+        static struct tracepoint __lk_tracepoint_##name                         \
+        __attribute__((section("__lk_tracepoints"), aligned(8))) =              \
+        { __lktpstr_##name, 0, NULL };                                          \
+        if (unlikely(__lk_tracepoint_##name.state))                             \
+             __LK_DO_TRACE(&__lk_tracepoint_##name,                             \
                  TPPROTO(proto), TPARGS(args));                                 \
     }                                                                           \
-    static inline int register_trace_##name(void (*probe)(proto), int state)    \
+    static inline int lk_register_trace_##name(void (*probe)(proto), int state) \
     {                                                                           \
-        return tracepoint_probe_register(#name, (void *)probe, state);          \
+        return lk_tracepoint_probe_register(#name, (void *)probe, state);       \
     }
 
 #else // !WITH_KERNEL_TRACEPOINT
 
-#define DEFINE_TRACE(name, proto, args)                                         \
-    static inline void trace_##name(proto) { }                                  \
-    static inline int register_trace_##name(void (*probe)(proto), int state)    \
+#define LK_DEFINE_TRACE(name, proto, args)                                      \
+    static inline void lk_trace_##name(proto) { }                               \
+    static inline int lk_register_trace_##name(void (*probe)(proto), int state) \
     {                                                                           \
         return -1;                                                              \
     }
 
 #endif
 
-extern int tracepoint_probe_register(const char *name, void *probe, int state);
+extern int lk_tracepoint_probe_register(const char *name, void *probe, int state);
 
 __END_CDECLS
 

@@ -182,7 +182,7 @@ void probe_subsys_kernel_ev(uintptr_t id, uintptr_t arg0, uintptr_t arg1)
 
 void kernel_evlog_init(void)
 {
-    register_trace_subsys_kernel_ev(probe_subsys_kernel_ev, false);
+    lk_register_trace_subsys_kernel_ev(probe_subsys_kernel_ev, false);
 }
 
 #else

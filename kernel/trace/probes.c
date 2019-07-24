@@ -34,6 +34,6 @@ void probe_subsys_global_printf(const char *str)
 
 static void probes_install(uint level)
 {
-    register_trace_subsys_global_printf(probe_subsys_global_printf, false);
+    lk_register_trace_subsys_global_printf(probe_subsys_global_printf, false);
 }
 LK_INIT_HOOK(trace_probes, &probes_install, LK_INIT_LEVEL_KERNEL);

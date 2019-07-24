@@ -26,7 +26,7 @@
 
 #include <kernel/trace/tracepoint.h>
 
-DEFINE_TRACE(subsys_kernel_ev,
+LK_DEFINE_TRACE(subsys_kernel_ev,
     TPPROTO(uintptr_t id, uintptr_t arg0, uintptr_t arg1),
     TPARGS(id, arg0, arg1));
 

@@ -42,32 +42,15 @@ struct tracepoint {
 
 #define __LK_DO_TRACE(tp, proto, args)                                          \
     do {                                                                        \
-        void **it_func;                                                         \
-                                                                                \
-        it_func = (tp)->funcs;                                                  \
-        if (it_func) {                                                          \
-            do {                                                                \
-                ((void(*)(proto))(*it_func))(args);                             \
-            } while (*(++it_func));                                             \
-        }                                                                       \
     } while (0)
 
 #define LK_DEFINE_TRACE(name, proto, args)                                      \
     static inline void lk_trace_##name(proto)                                   \
     {                                                                           \
-        static const char __lktpstr_##name[]                                    \
-        __attribute__((section("__lk_tracepoints_strings"))) = #name;           \
-                                                                                \
-        static struct tracepoint __lk_tracepoint_##name                         \
-        __attribute__((section("__lk_tracepoints"), aligned(8))) =              \
-        { __lktpstr_##name, 0, NULL };                                          \
-        if (unlikely(__lk_tracepoint_##name.state))                             \
-             __LK_DO_TRACE(&__lk_tracepoint_##name,                             \
-                 TPPROTO(proto), TPARGS(args));                                 \
     }                                                                           \
     static inline int lk_register_trace_##name(void (*probe)(proto), int state) \
     {                                                                           \
-        return lk_tracepoint_probe_register(#name, (void *)probe, state);       \
+        return 0;                                                               \
     }
 
 #else // !WITH_KERNEL_TRACEPOINT

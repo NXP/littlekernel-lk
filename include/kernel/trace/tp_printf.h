@@ -30,9 +30,9 @@
 
 #include <kernel/trace/tracepoint.h>
 
-LK_DEFINE_TRACE(subsys_global_printf,
-    TPPROTO(const char *str),
-    TPARGS(str));
+LK_TP(subsys_global_printf,
+    LK_PARAMS(const char *str),
+    LK_PARAMS(str));
 
 #if WITH_KERNEL_TRACEPOINT
 

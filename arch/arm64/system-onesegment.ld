@@ -57,7 +57,7 @@ SECTIONS
         KEEP(*(.rodata.fault_handler_table))
         __fault_handler_table_end = .;
         *(.rodata .rodata.* .gnu.linkonce.r.*)
-        *(__lk_tracepoints_strings)
+        *(__lk_tp_strings)
     }
 
     /*
@@ -77,7 +77,7 @@ SECTIONS
         *(.data .data.* .gnu.linkonce.d.*)
         . = ALIGN(8);
         __start___tracepoints = .;
-        *(__lk_tracepoints)
+        *(__lk_tp)
         __stop___tracepoints = .;
     }
 

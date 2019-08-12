@@ -51,6 +51,7 @@ void cbuf_initialize_etc(cbuf_t *cbuf, size_t len, void *buf)
     cbuf->len_pow2 = log2_uint(len);
     cbuf->buf = buf;
     cbuf->no_event = false;
+    cbuf->is_reset = false;
     event_init(&cbuf->event, false, 0);
     spin_lock_init(&cbuf->lock);
 
@@ -107,9 +108,11 @@ size_t cbuf_write(cbuf_t *cbuf, const void *_buf, size_t len, bool canreschedule
         }
 
         if (NULL == buf) {
-            memset(cbuf->buf + cbuf->head, 0, write_len);
+            if (cbuf->is_reset == false)
+                memset(cbuf->buf + cbuf->head, 0, write_len);
         } else {
             memcpy(cbuf->buf + cbuf->head, buf + pos, write_len);
+            cbuf->is_reset = false;
         }
 
         cbuf->head = INC_POINTER(cbuf, cbuf->head, write_len);
@@ -271,4 +274,11 @@ retry:
         goto retry;
 
     return ret;
+}
+
+void cbuf_reset_with_zero(cbuf_t *cbuf)
+{
+    cbuf_reset(cbuf);
+    memset(cbuf->buf, 0, cbuf_size(cbuf));
+    cbuf->is_reset = true;
 }

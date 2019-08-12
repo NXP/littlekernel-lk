@@ -38,6 +38,7 @@ typedef struct cbuf {
     event_t event;
     spin_lock_t lock;
     bool no_event;
+    bool is_reset;
 } cbuf_t;
 
 /**
@@ -158,6 +159,16 @@ static inline void cbuf_reset(cbuf_t *cbuf)
 {
     cbuf_read(cbuf, NULL, cbuf_size(cbuf), false);
 }
+
+/**
+ * cbuf_reset_and_zero
+ *
+ * Reset the cbuf instance, discarding any data which may be in the buffer at
+ * the moment, and fill the buffer with 0.
+ *
+ * @param[in] cbuf The cbuf instance to reset and zero.
+ */
+void cbuf_reset_with_zero(cbuf_t *cbuf);
 
 /* special cases for dealing with a single char of data */
 size_t cbuf_read_char(cbuf_t *cbuf, char *c, bool block);

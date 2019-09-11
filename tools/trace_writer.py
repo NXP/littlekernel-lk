@@ -75,6 +75,10 @@ class TraceWriter():
         self.char8_type.encoding = CTFStringEncoding.UTF8
         self.char8_type.alignment = 8
 
+        self.uint8_type = CTFWriter.IntegerFieldDeclaration(8)
+        self.uint8_type.signed = False
+        self.uint8_type.alignment = 8
+
         self.int16_type = CTFWriter.IntegerFieldDeclaration(16)
         self.int16_type.signed = True
         self.int16_type.alignment = 8

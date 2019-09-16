@@ -31,10 +31,6 @@
 #include <lib/cbuf.h>
 
 #include <kernel/trace/tracelog.h>
-#include <kernel/trace/tracelog_str.h>
-#include <kernel/trace/tracelog_bin.h>
-#include <kernel/trace/tracelog_kernel.h>
-#include <tracelog_af.h>
 
 #include <ivshmem-endpoint.h>
 #include <cipc.h>
@@ -51,18 +47,19 @@
 
 #define CPUS_NUM    (3)
 
+extern const struct tracelog_container __tracelog_start;
+extern const struct tracelog_container __tracelog_end;
+
+/* Global struct for with all tracepoint hooks */
+static struct tracelog_hooks *g_hooks;
+
+
 static struct {
     cbuf_t cbuf;
     uint8_t store[CBUF_SIZE];
     spin_lock_t lock;
 } ring[CPUS_NUM];
 
-static struct tracelog_hooks hooks[] = {
-    [TRACELOG_TYPE_STR]     = { tracelog_str_print, tracelog_str_store, NULL },
-    [TRACELOG_TYPE_KERNEL]  = { tracelog_kernel_print, tracelog_kernel_store, tracelog_kernel_no_ipc_trace },
-    [TRACELOG_TYPE_BINARY]  = { tracelog_bin_print, tracelog_bin_store, NULL },
-    [TRACELOG_TYPE_AF]  = { tracelog_af_print, tracelog_af_store, NULL },
-};
 
 static uint8_t flush_store[CBUF_SIZE];
 
@@ -110,10 +107,10 @@ void tracelog_write(unsigned int type, void *arg0, void *arg1)
     header->cpu_id = (uint8_t) arch_curr_cpu_num();
     header->timestamp = current_time_hires();
 
-    if (hooks[t].no_trace && hooks[t].no_trace(header, arg0, arg1))
+    if (g_hooks[t].no_trace && g_hooks[t].no_trace(header, arg0, arg1))
         return;
 
-    hooks[t].store(header, arg0, arg1);
+    g_hooks[t].store(header, arg0, arg1);
 
     tracelog_write_cbuf(header);
 }
@@ -156,7 +153,7 @@ static int tracelog_flush_thread(void *arg)
     return 0;
 }
 
-static void tracelog_init(uint level)
+void tracelog_init(uint level)
 {
     unsigned int cpu;
 
@@ -164,6 +161,29 @@ static void tracelog_init(uint level)
         cbuf_initialize_etc(&ring[cpu].cbuf, CBUF_SIZE, ring[cpu].store);
         ring[cpu].cbuf.no_event = true;
     }
+
+    g_hooks = malloc(TRACELOG_TYPE_NUM * sizeof(struct tracelog_hooks));
+    if (!g_hooks)
+        return;
+
+    memset(g_hooks, 0,
+           TRACELOG_TYPE_NUM * sizeof(struct tracelog_hooks));
+
+    const struct tracelog_container *tracelog;
+    for (tracelog = &__tracelog_start; tracelog != &__tracelog_end; tracelog++) {
+        if (tracelog->id >= TRACELOG_TYPE_NUM)
+            continue;
+
+        struct tracelog_hooks *hooks = &g_hooks[tracelog->id];
+        if (hooks->print || hooks->store) {
+            TRACEF("This hook id '%d' is already allocated. skip\n",
+                   tracelog->id);
+            continue;
+        }
+
+        memcpy(hooks, &tracelog->hooks, sizeof(struct tracelog_hooks));
+    }
+
 }
 LK_INIT_HOOK(trace_tracelog, &tracelog_init, LK_INIT_LEVEL_KERNEL);
 
@@ -219,7 +239,7 @@ static void cmd_do_list(void)
 
             printf("[ %llu.%d | type: %d | subtype: %d ]: ", header->timestamp, header->cpu_id,
                     TRACELOG_TYPE(header->type), TRACELOG_SUBTYPE(header->type));
-            hooks[t].print(header, &flush_store[off + sizeof(struct tracelog_entry_header)]);
+            g_hooks[t].print(header, &flush_store[off + sizeof(struct tracelog_entry_header)]);
         }
     }
 }

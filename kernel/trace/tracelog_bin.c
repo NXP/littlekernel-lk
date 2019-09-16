@@ -26,15 +26,20 @@
 
 #include <kernel/trace/tracelog.h>
 
-void tracelog_bin_print(struct tracelog_entry_header *header, void *buf)
+static void tracelog_bin_print(struct tracelog_entry_header *header, void *buf)
 {
     printf("Binary data size: %d bytes\n", header->len);
 }
 
-void tracelog_bin_store(struct tracelog_entry_header *header, void *arg0, void *arg1)
+static void tracelog_bin_store(struct tracelog_entry_header *header, void *arg0, void *arg1)
 {
     header->len = (uint16_t) ((uintptr_t) arg1 & 0xffffffff);
 
     memcpy(&header->data[0], arg0, header->len);
 }
 
+TRACELOG_START(bin, TRACELOG_TYPE_BINARY)
+	.print = tracelog_bin_print,
+	.store = tracelog_bin_store,
+	.no_trace = NULL,
+TRACELOG_END

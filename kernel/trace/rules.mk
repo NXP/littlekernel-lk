@@ -13,4 +13,6 @@ MODULE_SRCS += \
 GLOBAL_DEFINES += \
 	WITH_KERNEL_TRACEPOINT=1
 
+EXTRA_LINKER_SCRIPTS += $(LOCAL_DIR)/traces.ld
+
 include make/module.mk

@@ -60,6 +60,11 @@ struct tracelog_hooks {
     bool (*no_trace)(struct tracelog_entry_header *header, void *arg0, void *arg1);
 };
 
+struct tracelog_container {
+    struct tracelog_hooks hooks;
+    uint32_t id;
+};
+
 #if WITH_KERNEL_TRACEPOINT
 
 extern void tracelog_write(unsigned int type, void *arg0, void *arg1);
@@ -69,6 +74,13 @@ extern void tracelog_write(unsigned int type, void *arg0, void *arg1);
 static inline void tracelog_write(unsigned int type, void *arg0, void *arg1) { }
 
 #endif
+
+#define TRACELOG_START(_name, _id) const struct tracelog_container \
+    hooks_##_name __ALIGNED(sizeof(void *)) __SECTION(".tracelog") = { \
+        .id = _id, \
+        .hooks = {
+
+#define TRACELOG_END }, };
 
 __END_CDECLS
 

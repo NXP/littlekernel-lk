@@ -38,3 +38,8 @@ void tracelog_str_store(struct tracelog_entry_header *header, void *arg0, void *
     memcpy(&header->data[0], arg0, header->len);
 }
 
+TRACELOG_START(str, TRACELOG_TYPE_STR)
+	.print = tracelog_str_print,
+	.store = tracelog_str_store,
+	.no_trace = NULL,
+TRACELOG_END

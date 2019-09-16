@@ -224,3 +224,8 @@ void tracelog_kernel_store(struct tracelog_entry_header *header, void *arg0, voi
     hooks[t].store(header, arg0, arg1);
 }
 
+TRACELOG_START(kernel, TRACELOG_TYPE_KERNEL)
+	.print = tracelog_kernel_print,
+	.store = tracelog_kernel_store,
+	.no_trace = tracelog_kernel_no_ipc_trace,
+TRACELOG_END

@@ -45,7 +45,11 @@
 
 #if WITH_SMP
 /* smp boot lock */
+#ifdef SPINLOCK_STATS
+static spin_lock_t arm_boot_cpu_lock = { .lock = 1, };
+#else
 static spin_lock_t arm_boot_cpu_lock = 1;
+#endif
 static volatile int secondaries_to_init = 0;
 #endif
 

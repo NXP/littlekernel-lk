@@ -25,9 +25,37 @@
 #include <arch/ops.h>
 #include <stdbool.h>
 
+#ifndef SPINLOCK_STATS
 #define SPIN_LOCK_INITIAL_VALUE (0)
 
 typedef unsigned long spin_lock_t;
+
+#else
+struct spin_lock_elem;
+
+typedef struct spin_lock {
+    unsigned long lock; /* MUST be first parameter */
+    struct spin_lock_elem *elem;
+} spin_lock_t;
+
+typedef struct spin_lock_elem {
+    spin_lock_t *lock;
+    uint64_t ts;
+    uint64_t max;
+    uint64_t mean;
+    uint32_t num;
+    uint32_t magic;
+    void *caller;
+} spin_lock_elem_t;
+
+#define SPIN_LOCK_MAGIC 0x4e695053 /* SPiN */
+
+#define SPIN_LOCK_INITIAL_VALUE \
+{ \
+    .lock = 0, \
+    .elem = NULL, \
+}
+#endif
 
 typedef unsigned int spin_lock_saved_state_t;
 typedef unsigned int spin_lock_save_flags_t;
@@ -53,6 +81,7 @@ static inline void arch_spin_unlock(spin_lock_t *lock)
 }
 #endif
 
+#ifndef SPINLOCK_STATS
 static inline void arch_spin_lock_init(spin_lock_t *lock)
 {
     *lock = SPIN_LOCK_INITIAL_VALUE;
@@ -62,6 +91,63 @@ static inline bool arch_spin_lock_held(spin_lock_t *lock)
 {
     return *lock != 0;
 }
+
+#else
+
+#include <string.h>
+#include <platform.h>
+
+void spin_lock_register(spin_lock_t *lock);
+
+static inline void arch_spin_lock_init(spin_lock_t *lock)
+{
+    memset(lock, 0, sizeof(spin_lock_t));
+    spin_lock_register(lock);
+}
+
+static inline void arch_spin_lock_and_ts(spin_lock_t *lock)
+{
+    arch_spin_lock(lock);
+    spin_lock_elem_t *elem = lock->elem;
+
+    if (!elem)
+        return;
+
+    elem->ts = current_time_hires();
+}
+
+static inline int arch_spin_trylock_and_ts(spin_lock_t *lock)
+{
+    return arch_spin_trylock(lock);
+}
+
+static inline void arch_spin_unlock_and_ts(spin_lock_t *lock)
+{
+    spin_lock_elem_t *elem = lock->elem;
+
+    if (!elem)
+        goto skip;
+
+    uint64_t ts = current_time_hires();
+    uint64_t delta = ts - elem->ts;
+
+    if (delta > elem->max) {
+        elem->max = delta;
+        elem->caller = __GET_CALLER();
+    }
+
+    elem->num++;
+    elem->mean += delta;
+
+skip:
+    arch_spin_unlock(lock);
+}
+
+static inline bool arch_spin_lock_held(spin_lock_t *lock)
+{
+    return lock->lock != 0;
+}
+#endif
 
 enum {
     /* Possible future flags:

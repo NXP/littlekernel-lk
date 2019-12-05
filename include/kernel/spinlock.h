@@ -27,7 +27,7 @@
 
 __BEGIN_CDECLS
 
-/* interrupts should already be disabled */
+#ifndef SPINLOCK_STATS
 static inline void spin_lock(spin_lock_t *lock)
 {
     arch_spin_lock(lock);
@@ -44,6 +44,25 @@ static inline void spin_unlock(spin_lock_t *lock)
 {
     arch_spin_unlock(lock);
 }
+#else
+/* interrupts should already be disabled */
+static inline void spin_lock(spin_lock_t *lock)
+{
+    arch_spin_lock_and_ts(lock);
+}
+
+/* Returns 0 on success, non-0 on failure */
+static inline int spin_trylock(spin_lock_t *lock)
+{
+    return arch_spin_trylock_and_ts(lock);
+}
+
+/* interrupts should already be disabled */
+static inline void spin_unlock(spin_lock_t *lock)
+{
+    arch_spin_unlock_and_ts(lock);
+}
+#endif
 
 static inline void spin_lock_init(spin_lock_t *lock)
 {

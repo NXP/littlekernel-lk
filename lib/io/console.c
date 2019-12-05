@@ -49,7 +49,7 @@
 #define PRINT_LOCK_FLAGS SPIN_LOCK_FLAG_INTERRUPTS
 #endif
 
-static spin_lock_t print_spin_lock = 0;
+static spin_lock_t print_spin_lock;
 static struct list_node print_callbacks = LIST_INITIAL_VALUE(print_callbacks);
 
 #if CONSOLE_HAS_INPUT_BUFFER
@@ -84,7 +84,9 @@ void __kernel_console_write(const char* str, size_t len)
 void __kernel_serial_write(const char* str, size_t len)
 {
 #if WITH_LIB_DEBUGLOG
-    static spin_lock_t dputc_spin_lock = 0;
+    static spin_lock_t dputc_spin_lock;
+
+    arch_spin_lock_init(&dputc_spin_lock);
 
     spin_lock_saved_state_t state;
     spin_lock_irqsave(&dputc_spin_lock, state);
@@ -215,6 +217,7 @@ static ssize_t __debug_stdio_read(io_handle_t *io, char *s, size_t len)
 #if CONSOLE_HAS_INPUT_BUFFER
 void console_init_hook(uint level)
 {
+    arch_spin_lock_init(&print_spin_lock);
     cbuf_initialize_etc(&console_input_cbuf, sizeof(console_cbuf_buf), console_cbuf_buf);
 }
 

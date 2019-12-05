@@ -300,7 +300,8 @@ static enum handler_return timer_tick(void *arg, lk_time_t now)
 
 void timer_init(void)
 {
-    timer_lock = SPIN_LOCK_INITIAL_VALUE;
+    arch_spin_lock_init(&timer_lock);
+
     for (uint i = 0; i < SMP_MAX_CPUS; i++) {
         list_initialize(&timers[i].timer_queue);
     }

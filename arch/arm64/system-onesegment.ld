@@ -117,6 +117,9 @@ SECTIONS
 
     . = %KERNEL_BASE% + %MEMSIZE%;
     _end_of_ram = .;
+    .dummy_end_of_ram : {
+        __dummy_end_ram = .;
+    }
 
     /* Strip unnecessary stuff */
     /DISCARD/ : { *(.comment .note .eh_frame) }

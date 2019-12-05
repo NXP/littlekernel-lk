@@ -51,6 +51,11 @@ static int cmd_threadstats(int argc, const cmd_args *argv);
 static int cmd_threadload(int argc, const cmd_args *argv);
 static int cmd_kevlog(int argc, const cmd_args *argv);
 
+#ifdef SPINLOCK_STATS
+#include <kernel/spinlock.h>
+static int cmd_spinlockstats(int argc, const cmd_args *argv);
+#endif
+
 STATIC_COMMAND_START
 #if LK_DEBUGLEVEL > 1
 STATIC_COMMAND_MASKED("threads", "list kernel threads", &cmd_threads, CMD_AVAIL_ALWAYS)
@@ -63,6 +68,9 @@ STATIC_COMMAND("threadload", "toggle thread load display", &cmd_threadload)
 #if !WITH_KERNEL_TRACEPOINT
 STATIC_COMMAND_MASKED("kevlog", "dump kernel event log", &cmd_kevlog, CMD_AVAIL_ALWAYS)
 #endif
+#ifdef SPINLOCK_STATS
+STATIC_COMMAND_MASKED("lockstats", "spin lock statistics", &cmd_spinlockstats, CMD_AVAIL_ALWAYS)
+#endif
 #endif
 STATIC_COMMAND_END(kernel);
 
@@ -74,6 +82,74 @@ static int cmd_threads(int argc, const cmd_args *argv)
 
     return 0;
 }
+
+#ifdef SPINLOCK_STATS
+static uint32_t spinlock_list_cnt = 0;
+#define SPINLOCK_LIST_MAX      512
+
+static spin_lock_elem_t spin_lock_table[SPINLOCK_LIST_MAX];
+
+inline void spin_lock_register(spin_lock_t *lock)
+{
+    uint32_t i;
+
+    if (spinlock_list_cnt >= SPINLOCK_LIST_MAX) {
+        printf("Too many spinlocks !\n");
+        return;
+    }
+
+    for (i = 0; i < spinlock_list_cnt; i++) {
+        spin_lock_elem_t *elem = &spin_lock_table[i];
+
+        if (elem->lock == lock) {
+            printf("%p lock already registered. Caller %p\n",
+                   lock, __GET_CALLER());
+            return;
+        }
+    }
+
+    /* Add into list */
+    spin_lock_elem_t *elem = &spin_lock_table[spinlock_list_cnt++];
+
+    lock->elem = elem;
+    elem->lock = lock;
+    elem->caller = __GET_CALLER();
+    elem->magic = SPIN_LOCK_MAGIC;
+}
+
+static int cmd_spinlockstats(int argc, const cmd_args *argv)
+{
+    uint32_t i, limit = 10;
+
+    if (argc > 1 && !strcmp(argv[1].str, "reset")) {
+        for (i = 0; i < spinlock_list_cnt; i++) {
+            spin_lock_elem_t *elem = &spin_lock_table[i];
+
+            elem->caller = NULL;
+            elem->num = elem->mean = elem->max = 0;
+
+        }
+        return 0;
+    } else if (argc > 1 ) {
+        limit = argv[1].u;
+    }
+
+    printf("spin lock list - limit is %uus\n", limit);
+    printf(" total %u spin lock\n", spinlock_list_cnt);
+
+    for (i = 0; i < spinlock_list_cnt; i++) {
+        spin_lock_elem_t *elem = &spin_lock_table[i];
+
+        if (elem->magic == SPIN_LOCK_MAGIC && elem->max >= limit) {
+            printf(" lock %p - caller %p - num %u - mean %llu - max %llu\n",
+               elem->lock, elem->caller, elem->num, elem->mean / elem->num, elem->max);
+        }
+    }
+
+    return 0;
+}
+#endif /* SPINLOCK_STATS */
+
 #endif
 
 #if THREAD_STATS

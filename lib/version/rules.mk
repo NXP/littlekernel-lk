@@ -34,4 +34,26 @@ GENERATED += $(BUILDID_H)
 # make sure the module properly depends on and can find buildid.h
 MODULE_SRCDEPS := $(BUILDID_H)
 
+ROOT_PATH = $(shell pwd)
+
+# get revision littlekernel-imx8
+GITVERSION = $(shell git -C $(ROOT_PATH)/imx8 log --oneline | head -n 1 | cut  -f 1 -d ' ')
+GITSTATUS = $(shell git -C $(ROOT_PATH)/imx8 status -uno --porcelain)
+ifneq ($(GITSTATUS), )
+VERSION = $(GITVERSION)-dirty
+else
+VERSION = $(GITVERSION)
+endif
+GLOBAL_DEFINES += VERSION_IMX8=\"$(VERSION)\"
+
+# get revision littlekernel-lk
+GITVERSION = $(shell git -C $(ROOT_PATH)/lk log --oneline | head -n 1 | cut  -f 1 -d ' ')
+GITSTATUS = $(shell git -C $(ROOT_PATH)/lk status -uno --porcelain)
+ifneq ($(GITSTATUS), )
+VERSION = $(GITVERSION)-dirty
+else
+VERSION = $(GITVERSION)
+endif
+GLOBAL_DEFINES += VERSION_LK=\"$(VERSION)\"
+
 include make/module.mk

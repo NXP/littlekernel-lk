@@ -45,6 +45,19 @@ const lk_version_t version = {
     .buildid = BUILDID
 };
 
+#ifndef VERSION_IMX8
+#define VERSION_IMX8 "Unknown"
+#endif
+
+#ifndef VERSION_LK
+#define VERSION_LK "Unknown"
+#endif
+
+const lk_imx8_version_t lk_version = {
+    .imx8____ref = VERSION_IMX8,
+    .lk______ref = VERSION_LK,
+};
+
 void print_version(void)
 {
     printf("version:\n");
@@ -53,6 +66,9 @@ void print_version(void)
     printf("\ttarget:   %s\n", version.target);
     printf("\tproject:  %s\n", version.project);
     printf("\tbuildid:  %s\n", version.buildid);
+    printf("\tLK version:\n");
+    printf("\t  imx8 rev: %s\n", lk_version.imx8____ref);
+    printf("\t  lk   rev: %s\n", lk_version.lk______ref);
 }
 
 #if WITH_LIB_CONSOLE

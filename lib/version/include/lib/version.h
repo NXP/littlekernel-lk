@@ -38,6 +38,11 @@ typedef struct {
     const char *buildid;
 } lk_version_t;
 
+typedef struct {
+    const char *imx8____ref;
+    const char *lk______ref;
+} lk_imx8_version_t;
+
 extern const lk_version_t version;
 
 void print_version(void);

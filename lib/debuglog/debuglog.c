@@ -19,7 +19,12 @@
 #include <string.h>
 #include <assert.h>
 
+#ifndef CASCFG_DLOG_SIZE_IN_KB
 #define DLOG_SIZE (128u * 1024u)
+#else
+#define DLOG_SIZE (CASCFG_DLOG_SIZE_IN_KB * 1024u)
+#endif
+
 #define DLOG_MASK (DLOG_SIZE - 1u)
 
 static uint8_t DLOG_DATA[DLOG_SIZE];

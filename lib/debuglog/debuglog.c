@@ -382,12 +382,12 @@ static void dlog_init_hook(uint level) {
     DEBUG_ASSERT(dumper_thread == NULL);
 
     if ((notifier_thread = thread_create("debuglog-notifier", debuglog_notifier, NULL,
-                                         HIGH_PRIORITY - 1, DEFAULT_STACK_SIZE)) != NULL) {
+                                         LOW_PRIORITY - 1, DEFAULT_STACK_SIZE)) != NULL) {
         thread_resume(notifier_thread);
     }
 
     if ((dumper_thread = thread_create("debuglog-dumper", debuglog_dumper, NULL,
-                                       HIGH_PRIORITY - 2, DEFAULT_STACK_SIZE)) != NULL) {
+                                       LOW_PRIORITY - 2, DEFAULT_STACK_SIZE)) != NULL) {
         thread_resume(dumper_thread);
     }
 }

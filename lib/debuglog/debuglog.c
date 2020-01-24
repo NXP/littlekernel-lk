@@ -1,5 +1,5 @@
 // Copyright 2016 The Fuchsia Authors
-// Copyright 2018 NXP
+// Copyright 2018-2020 NXP
 //
 // Use of this source code is governed by a MIT-style
 // license that can be found in the LICENSE file or at
@@ -19,15 +19,19 @@
 #include <string.h>
 #include <assert.h>
 
-#ifndef CASCFG_DLOG_SIZE_IN_KB
+#ifndef IMX_DLOG_SIZE_IN_KB
 #define DLOG_SIZE (128u * 1024u)
-#else
-#define DLOG_SIZE (CASCFG_DLOG_SIZE_IN_KB * 1024u)
-#endif
-
 #define DLOG_MASK (DLOG_SIZE - 1u)
 
 static uint8_t DLOG_DATA[DLOG_SIZE];
+static uint32_t dlog_size = DLOG_SIZE;
+static uint32_t dlog_mask = DLOG_MASK;
+#else
+extern uint8_t DLOG_DATA[];
+extern uint32_t dlog_size;
+extern uint32_t dlog_mask;
+#endif
+
 
 static dlog_t DLOG = {
     .lock = SPIN_LOCK_INITIAL_VALUE,
@@ -91,7 +95,7 @@ void dlog_panic(void)
 // Tail indicates the oldest message in the debug log to read
 // from, Head indicates the next space in the debug log to write
 // a new message to.  They are clipped to the actual buffer by
-// DLOG_MASK.
+// dlog_mask.
 //
 //       T                     T
 //  [....XXXX....]  [XX........XX]
@@ -134,14 +138,14 @@ status_t dlog_write(uint32_t flags, const void* data_ptr, size_t len) {
 
     // Discard records at tail until there is enough
     // space for the new record.
-    while ((log->head - log->tail) > (DLOG_SIZE - wiresize)) {
-        uint32_t header = *(uint32_t*)(log->data + (log->tail & DLOG_MASK));
+    while ((log->head - log->tail) > (dlog_size - wiresize)) {
+        uint32_t header = *(uint32_t*)(log->data + (log->tail & dlog_mask));
         log->tail += DLOG_HDR_GET_FIFOLEN(header);
     }
 
-    size_t offset = (log->head & DLOG_MASK);
+    size_t offset = (log->head & dlog_mask);
 
-    size_t fifospace = DLOG_SIZE - offset;
+    size_t fifospace = dlog_size - offset;
 
     if (fifospace >= wiresize) {
         // everything fits in one write, simple case!
@@ -196,11 +200,11 @@ status_t dlog_read(dlog_reader_t* rdr, uint32_t flags, void* data_ptr,
     }
 
     if (rtail != log->head) {
-        size_t offset = (rtail & DLOG_MASK);
+        size_t offset = (rtail & dlog_mask);
         uint32_t header = *(uint32_t*)(log->data + offset);
 
         size_t actual = DLOG_HDR_GET_READLEN(header);
-        size_t fifospace = DLOG_SIZE - offset;
+        size_t fifospace = dlog_size - offset;
 
         if (fifospace >= actual) {
             memcpy(ptr, log->data + offset, actual);
@@ -390,6 +394,8 @@ static void dlog_init_hook(uint level) {
                                        LOW_PRIORITY - 2, DEFAULT_STACK_SIZE)) != NULL) {
         thread_resume(dumper_thread);
     }
+
+    printf("Debug log buffer size %u\n", dlog_size);
 }
 
 LK_INIT_HOOK(debuglog, dlog_init_hook, LK_INIT_LEVEL_THREADING - 1);

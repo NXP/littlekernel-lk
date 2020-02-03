@@ -174,5 +174,6 @@ void cbuf_reset_with_zero(cbuf_t *cbuf);
 size_t cbuf_read_char(cbuf_t *cbuf, char *c, bool block);
 size_t cbuf_write_char(cbuf_t *cbuf, char c, bool canreschedule);
 
+size_t _cbuf_write(cbuf_t *cbuf, const void *_buf, size_t len, bool canreschedule, bool enable);
 __END_CDECLS
 

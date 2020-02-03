@@ -71,6 +71,11 @@ size_t cbuf_space_used(cbuf_t *cbuf)
 
 size_t cbuf_write(cbuf_t *cbuf, const void *_buf, size_t len, bool canreschedule)
 {
+    return _cbuf_write(cbuf, _buf, len, canreschedule, true);
+}
+
+size_t _cbuf_write(cbuf_t *cbuf, const void *_buf, size_t len, bool canreschedule, bool enable)
+{
     const char *buf = (const char *)_buf;
 
     LTRACEF("len %zd\n", len);
@@ -108,10 +113,13 @@ size_t cbuf_write(cbuf_t *cbuf, const void *_buf, size_t len, bool canreschedule
         }
 
         if (NULL == buf) {
-            if (cbuf->is_reset == false)
+            if ((cbuf->is_reset == false) && (enable)) {
                 memset(cbuf->buf + cbuf->head, 0, write_len);
+            }
         } else {
-            memcpy(cbuf->buf + cbuf->head, buf + pos, write_len);
+            if (enable) {
+                memcpy(cbuf->buf + cbuf->head, buf + pos, write_len);
+            }
             cbuf->is_reset = false;
         }
 

@@ -141,6 +141,11 @@ size_t _cbuf_write(cbuf_t *cbuf, const void *_buf, size_t len, bool canreschedul
 
 size_t cbuf_read(cbuf_t *cbuf, void *_buf, size_t buflen, bool block)
 {
+    return _cbuf_read(cbuf, _buf, buflen, block, true);
+}
+
+size_t _cbuf_read(cbuf_t *cbuf, void *_buf, size_t buflen, bool block, bool enable)
+{
     char *buf = (char *)_buf;
 
     DEBUG_ASSERT(cbuf);
@@ -173,7 +178,8 @@ retry:
 
             // Only perform the copy if a buf was supplied
             if (NULL != buf) {
-                memcpy(buf + pos, cbuf->buf + cbuf->tail, read_len);
+                if (enable)
+                    memcpy(buf + pos, cbuf->buf + cbuf->tail, read_len);
             }
 
             cbuf->tail = INC_POINTER(cbuf, cbuf->tail, read_len);

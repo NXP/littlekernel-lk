@@ -170,6 +170,16 @@ static inline void cbuf_reset(cbuf_t *cbuf)
  */
 void cbuf_reset_with_zero(cbuf_t *cbuf);
 
+/**
+ * cbuf_reset_indexes
+ *
+ * Reset the cbuf instance, discarding any data which may be in the buffer at
+ * the moment, and move the head and tail pointers to buffer base address.
+ *
+ * @param[in] cbuf The cbuf instance to reset.
+ */
+void cbuf_reset_indexes(cbuf_t *cbuf);
+
 /* special cases for dealing with a single char of data */
 size_t cbuf_read_char(cbuf_t *cbuf, char *c, bool block);
 size_t cbuf_write_char(cbuf_t *cbuf, char c, bool canreschedule);

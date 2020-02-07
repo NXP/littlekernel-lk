@@ -296,3 +296,13 @@ void cbuf_reset_with_zero(cbuf_t *cbuf)
     memset(cbuf->buf, 0, cbuf_size(cbuf));
     cbuf->is_reset = true;
 }
+
+void cbuf_reset_indexes(cbuf_t *cbuf)
+{
+    cbuf_reset(cbuf);
+    spin_lock_saved_state_t state;
+    spin_lock_irqsave(&cbuf->lock, state);
+    cbuf->head = cbuf->tail = 0;
+    spin_unlock_irqrestore(&cbuf->lock, state);
+}
+

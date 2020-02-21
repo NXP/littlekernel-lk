@@ -70,6 +70,29 @@ size_t cbuf_space_used(cbuf_t *cbuf)
     return modpow2((uint)(cbuf->head - cbuf->tail), cbuf->len_pow2);
 }
 
+static size_t cbuf_get_contiguous_space(cbuf_t *cbuf, size_t len, size_t pos)
+{
+    size_t write_len;
+    if (cbuf->head >= cbuf->tail) {
+        if (cbuf->tail == 0) {
+            // Special case - if tail is at position 0, we can't write all
+            // the way to the end of the buffer. Otherwise, head ends up at
+            // 0, head == tail, and buffer is considered "empty" again.
+            write_len =
+                MIN(valpow2(cbuf->len_pow2) - cbuf->head - 1, len - pos);
+        } else {
+            // Write to the end of the buffer.
+            write_len =
+                MIN(valpow2(cbuf->len_pow2) - cbuf->head, len - pos);
+        }
+    } else {
+        // Write from head to tail-1.
+        write_len = MIN(cbuf->tail - cbuf->head - 1, len - pos);
+    }
+
+    return write_len;
+}
+
 static size_t cbuf_write_wo_lock(cbuf_t *cbuf, const char *buf, size_t len, bool canreschedule)
 {
     size_t write_len;
@@ -77,22 +100,7 @@ static size_t cbuf_write_wo_lock(cbuf_t *cbuf, const char *buf, size_t len, bool
     bool enable = cbuf_is_sw_writer(cbuf);
 
     while (pos < len && cbuf_space_avail(cbuf) > 0) {
-        if (cbuf->head >= cbuf->tail) {
-            if (cbuf->tail == 0) {
-                // Special case - if tail is at position 0, we can't write all
-                // the way to the end of the buffer. Otherwise, head ends up at
-                // 0, head == tail, and buffer is considered "empty" again.
-                write_len =
-                    MIN(valpow2(cbuf->len_pow2) - cbuf->head - 1, len - pos);
-            } else {
-                // Write to the end of the buffer.
-                write_len =
-                    MIN(valpow2(cbuf->len_pow2) - cbuf->head, len - pos);
-            }
-        } else {
-            // Write from head to tail-1.
-            write_len = MIN(cbuf->tail - cbuf->head - 1, len - pos);
-        }
+        write_len = cbuf_get_contiguous_space(cbuf, len, pos);
 
         // if it's full, abort and return how much we've written
         if (write_len == 0) {
@@ -144,6 +152,19 @@ size_t cbuf_write(cbuf_t *cbuf, const void *_buf, size_t len, bool canreschedule
     return pos;
 }
 
+static size_t cbuf_get_contiguous_used(cbuf_t *cbuf, size_t buflen, size_t pos)
+{
+    size_t read_len;
+    if (cbuf->head > cbuf->tail) {
+        // simple case where there is no wraparound
+        read_len = MIN(cbuf->head - cbuf->tail, buflen - pos);
+    } else {
+        // read to the end of buffer in this pass
+        read_len = MIN(valpow2(cbuf->len_pow2) - cbuf->tail, buflen - pos);
+    }
+    return read_len;
+}
+
 size_t cbuf_read_wo_lock(cbuf_t *cbuf, char *buf, size_t buflen, bool block)
 {
     bool enable = cbuf_is_sw_reader(cbuf);
@@ -155,14 +176,7 @@ size_t cbuf_read_wo_lock(cbuf_t *cbuf, char *buf, size_t buflen, bool block)
         // loop until we've read everything we need
         // at most this will make two passes to deal with wraparound
         while (pos < buflen && cbuf->tail != cbuf->head) {
-            size_t read_len;
-            if (cbuf->head > cbuf->tail) {
-                // simple case where there is no wraparound
-                read_len = MIN(cbuf->head - cbuf->tail, buflen - pos);
-            } else {
-                // read to the end of buffer in this pass
-                read_len = MIN(valpow2(cbuf->len_pow2) - cbuf->tail, buflen - pos);
-            }
+            size_t read_len = cbuf_get_contiguous_used(cbuf, buflen, pos);
 
             // Only perform the copy if a buf was supplied
             if (NULL != buf) {

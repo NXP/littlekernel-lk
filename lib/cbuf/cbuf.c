@@ -227,6 +227,29 @@ retry:
     return ret;
 }
 
+void cbuf_trash(cbuf_t *cbuf, size_t len)
+{
+    LTRACEF("len %zd\n", len);
+
+    DEBUG_ASSERT(cbuf);
+
+    /* Trashing does not make sense if there is at least one
+     * hw producer or consumer
+     */
+    if (cbuf_is_sw_writer(cbuf) && (cbuf_is_sw_reader(cbuf)))
+        return;
+
+    DEBUG_ASSERT(len < valpow2(cbuf->len_pow2));
+
+    spin_lock_saved_state_t state;
+    spin_lock_irqsave(&cbuf->lock, state);
+
+    cbuf->head = INC_POINTER(cbuf, cbuf->head, len);
+    cbuf->tail = INC_POINTER(cbuf, cbuf->tail, len);
+
+    spin_unlock_irqrestore(&cbuf->lock, state);
+}
+
 size_t cbuf_peek(cbuf_t *cbuf, iovec_t *regions)
 {
     DEBUG_ASSERT(cbuf && regions);

@@ -148,6 +148,8 @@ size_t cbuf_read(cbuf_t *cbuf, void *buf, size_t buflen, bool block);
  */
 size_t cbuf_peek(cbuf_t *cbuf, iovec_t *regions);
 
+void cbuf_trash(cbuf_t *cbuf, size_t len);
+
 /**
  * cbuf_write
  *

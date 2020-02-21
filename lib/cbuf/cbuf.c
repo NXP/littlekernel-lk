@@ -70,18 +70,8 @@ size_t cbuf_space_used(cbuf_t *cbuf)
     return modpow2((uint)(cbuf->head - cbuf->tail), cbuf->len_pow2);
 }
 
-size_t cbuf_write(cbuf_t *cbuf, const void *_buf, size_t len, bool canreschedule)
+static size_t cbuf_write_wo_lock(cbuf_t *cbuf, const char *buf, size_t len, bool canreschedule)
 {
-    const char *buf = (const char *)_buf;
-
-    LTRACEF("len %zd\n", len);
-
-    DEBUG_ASSERT(cbuf);
-    DEBUG_ASSERT(len < valpow2(cbuf->len_pow2));
-
-    spin_lock_saved_state_t state;
-    spin_lock_irqsave(&cbuf->lock, state);
-
     size_t write_len;
     size_t pos = 0;
     bool enable = cbuf_is_sw_writer(cbuf);
@@ -127,6 +117,24 @@ size_t cbuf_write(cbuf_t *cbuf, const void *_buf, size_t len, bool canreschedule
     if (!cbuf->no_event && cbuf->head != cbuf->tail)
         event_signal(&cbuf->event, false);
 
+    return pos;
+}
+
+size_t cbuf_write(cbuf_t *cbuf, const void *_buf, size_t len, bool canreschedule)
+{
+
+    const char *buf = (const char *)_buf;
+    LTRACEF("len %zd\n", len);
+
+    DEBUG_ASSERT(cbuf);
+    DEBUG_ASSERT(len < valpow2(cbuf->len_pow2));
+
+    size_t pos = 0;
+    spin_lock_saved_state_t state;
+    spin_lock_irqsave(&cbuf->lock, state);
+
+    pos = cbuf_write_wo_lock(cbuf, buf, len, canreschedule);
+
     spin_unlock_irqrestore(&cbuf->lock, state);
 
     // XXX convert to only rescheduling if
@@ -136,21 +144,8 @@ size_t cbuf_write(cbuf_t *cbuf, const void *_buf, size_t len, bool canreschedule
     return pos;
 }
 
-size_t cbuf_read(cbuf_t *cbuf, void *_buf, size_t buflen, bool block)
+size_t cbuf_read_wo_lock(cbuf_t *cbuf, char *buf, size_t buflen, bool block)
 {
-    char *buf = (char *)_buf;
-
-    DEBUG_ASSERT(cbuf);
-
-retry:
-    // block on the cbuf outside of the lock, which may
-    // unblock us early and we'll have to double check below
-    if (!cbuf->no_event && block)
-        event_wait(&cbuf->event);
-
-    spin_lock_saved_state_t state;
-    spin_lock_irqsave(&cbuf->lock, state);
-
     bool enable = cbuf_is_sw_reader(cbuf);
     // see if there's data available
     size_t ret = 0;
@@ -187,6 +182,27 @@ retry:
 
         ret = pos;
     }
+
+    return ret;
+}
+
+size_t cbuf_read(cbuf_t *cbuf, void *_buf, size_t buflen, bool block)
+{
+    size_t ret = 0;
+    char *buf = (char *)_buf;
+
+    DEBUG_ASSERT(cbuf);
+
+retry:
+    // block on the cbuf outside of the lock, which may
+    // unblock us early and we'll have to double check below
+    if (!cbuf->no_event && block)
+        event_wait(&cbuf->event);
+
+    spin_lock_saved_state_t state;
+    spin_lock_irqsave(&cbuf->lock, state);
+
+    ret = cbuf_read_wo_lock(cbuf, buf, buflen, block);
 
     spin_unlock_irqrestore(&cbuf->lock, state);
 

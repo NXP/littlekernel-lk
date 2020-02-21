@@ -52,6 +52,7 @@ void cbuf_initialize_etc(cbuf_t *cbuf, size_t len, void *buf)
     cbuf->buf = buf;
     cbuf->no_event = false;
     cbuf->is_reset = false;
+    cbuf->flags = CBUF_FLAG_SW_IS_WRITER | CBUF_FLAG_SW_IS_READER;
     event_init(&cbuf->event, false, 0);
     spin_lock_init(&cbuf->lock);
 
@@ -71,11 +72,6 @@ size_t cbuf_space_used(cbuf_t *cbuf)
 
 size_t cbuf_write(cbuf_t *cbuf, const void *_buf, size_t len, bool canreschedule)
 {
-    return _cbuf_write(cbuf, _buf, len, canreschedule, true);
-}
-
-size_t _cbuf_write(cbuf_t *cbuf, const void *_buf, size_t len, bool canreschedule, bool enable)
-{
     const char *buf = (const char *)_buf;
 
     LTRACEF("len %zd\n", len);
@@ -88,6 +84,7 @@ size_t _cbuf_write(cbuf_t *cbuf, const void *_buf, size_t len, bool canreschedul
 
     size_t write_len;
     size_t pos = 0;
+    bool enable = cbuf_is_sw_writer(cbuf);
 
     while (pos < len && cbuf_space_avail(cbuf) > 0) {
         if (cbuf->head >= cbuf->tail) {
@@ -141,11 +138,6 @@ size_t _cbuf_write(cbuf_t *cbuf, const void *_buf, size_t len, bool canreschedul
 
 size_t cbuf_read(cbuf_t *cbuf, void *_buf, size_t buflen, bool block)
 {
-    return _cbuf_read(cbuf, _buf, buflen, block, true);
-}
-
-size_t _cbuf_read(cbuf_t *cbuf, void *_buf, size_t buflen, bool block, bool enable)
-{
     char *buf = (char *)_buf;
 
     DEBUG_ASSERT(cbuf);
@@ -159,6 +151,7 @@ retry:
     spin_lock_saved_state_t state;
     spin_lock_irqsave(&cbuf->lock, state);
 
+    bool enable = cbuf_is_sw_reader(cbuf);
     // see if there's data available
     size_t ret = 0;
     if (cbuf->tail != cbuf->head) {

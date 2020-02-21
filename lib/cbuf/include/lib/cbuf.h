@@ -39,7 +39,58 @@ typedef struct cbuf {
     spin_lock_t lock;
     bool no_event;
     bool is_reset;
+    uint flags;
 } cbuf_t;
+
+#define CBUF_FLAG_NO_EVENT      (1 << 0)
+#define CBUF_FLAG_IS_RESET      (1 << 1)
+#define CBUF_FLAG_SW_IS_WRITER  (1 << 2)
+#define CBUF_FLAG_SW_IS_READER  (1 << 3)
+
+static inline bool cbuf_is_no_event(cbuf_t *cbuf)
+{
+    return !!(cbuf->flags & CBUF_FLAG_NO_EVENT);
+}
+
+static inline bool cbuf_is_reset(cbuf_t *cbuf)
+{
+    return !!(cbuf->flags & CBUF_FLAG_IS_RESET);
+}
+
+static inline bool cbuf_is_sw_writer(cbuf_t *cbuf)
+{
+    return !!(cbuf->flags & CBUF_FLAG_SW_IS_WRITER);
+}
+
+static inline bool cbuf_is_sw_reader(cbuf_t *cbuf)
+{
+    return !!(cbuf->flags & CBUF_FLAG_SW_IS_READER);
+}
+
+static inline void cbuf_change_flag(cbuf_t *cbuf, uint flag, bool set)
+{
+    spin_lock_saved_state_t lock_state;
+    spin_lock_irqsave(&cbuf->lock, lock_state);
+
+    if (set)
+        cbuf->flags |= flag;
+    else
+        cbuf->flags &= ~flag;
+
+    smp_wmb();
+
+    spin_unlock_irqrestore(&cbuf->lock, lock_state);
+}
+
+static inline void cbuf_set_flag(cbuf_t *cbuf, uint flag)
+{
+    cbuf_change_flag(cbuf, flag, true);
+}
+
+static inline void cbuf_clear_flag(cbuf_t *cbuf, uint flag)
+{
+    cbuf_change_flag(cbuf, flag, false);
+}
 
 /**
  * cbuf_initialize
@@ -184,7 +235,5 @@ void cbuf_reset_indexes(cbuf_t *cbuf);
 size_t cbuf_read_char(cbuf_t *cbuf, char *c, bool block);
 size_t cbuf_write_char(cbuf_t *cbuf, char c, bool canreschedule);
 
-size_t _cbuf_read(cbuf_t *cbuf, void *_buf, size_t buflen, bool block, bool enable);
-size_t _cbuf_write(cbuf_t *cbuf, const void *_buf, size_t len, bool canreschedule, bool enable);
 __END_CDECLS
 

@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2009-2013 Travis Geiselbrecht
+ * Copyright 2020 NXP
  *
  * Permission is hereby granted, free of charge, to any person obtaining
  * a copy of this software and associated documentation files
@@ -42,10 +43,15 @@ typedef struct cbuf {
     uint flags;
 } cbuf_t;
 
-#define CBUF_FLAG_NO_EVENT      (1 << 0)
-#define CBUF_FLAG_IS_RESET      (1 << 1)
-#define CBUF_FLAG_SW_IS_WRITER  (1 << 2)
-#define CBUF_FLAG_SW_IS_READER  (1 << 3)
+#define CBUF_FLAG_NO_EVENT          (1 << 0)
+#define CBUF_FLAG_IS_RESET          (1 << 1)
+#define CBUF_FLAG_SW_IS_WRITER      (1 << 2)
+#define CBUF_FLAG_SW_IS_READER      (1 << 3)
+#define CBUF_FLAG_BUF_IS_CACHEABLE  (1 << 4)
+
+#define CBUF_FLAG_DEFAULT ( CBUF_FLAG_SW_IS_WRITER \
+                            | CBUF_FLAG_SW_IS_READER \
+                            | CBUF_FLAG_BUF_IS_CACHEABLE )
 
 static inline bool cbuf_is_no_event(cbuf_t *cbuf)
 {
@@ -65,6 +71,21 @@ static inline bool cbuf_is_sw_writer(cbuf_t *cbuf)
 static inline bool cbuf_is_sw_reader(cbuf_t *cbuf)
 {
     return !!(cbuf->flags & CBUF_FLAG_SW_IS_READER);
+}
+
+static inline bool cbuf_is_hw_writer(cbuf_t *cbuf)
+{
+    return !(cbuf_is_sw_writer(cbuf));
+}
+
+static inline bool cbuf_is_hw_reader(cbuf_t *cbuf)
+{
+    return !(cbuf_is_sw_reader(cbuf));
+}
+
+static inline bool cbuf_is_cacheable(cbuf_t *cbuf)
+{
+    return !!(cbuf->flags & CBUF_FLAG_BUF_IS_CACHEABLE);
 }
 
 static inline void cbuf_change_flag(cbuf_t *cbuf, uint flag, bool set)

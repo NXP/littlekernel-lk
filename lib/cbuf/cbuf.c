@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2008-2015 Travis Geiselbrecht
+ * Copyright 2020 NXP
  *
  * Permission is hereby granted, free of charge, to any person obtaining
  * a copy of this software and associated documentation files
@@ -52,7 +53,7 @@ void cbuf_initialize_etc(cbuf_t *cbuf, size_t len, void *buf)
     cbuf->buf = buf;
     cbuf->no_event = false;
     cbuf->is_reset = false;
-    cbuf->flags = CBUF_FLAG_SW_IS_WRITER | CBUF_FLAG_SW_IS_READER;
+    cbuf->flags = CBUF_FLAG_DEFAULT;
     event_init(&cbuf->event, false, 0);
     spin_lock_init(&cbuf->lock);
 

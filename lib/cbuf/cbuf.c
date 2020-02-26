@@ -347,8 +347,14 @@ retry:
 
 void cbuf_reset_with_zero(cbuf_t *cbuf)
 {
-    cbuf_reset(cbuf);
     memset(cbuf->buf, 0, cbuf_size(cbuf));
+    if (cbuf_is_sw_writer(cbuf) && (cbuf_is_sw_reader(cbuf))) {
+        cbuf_reset(cbuf);
+    } else {
+        cbuf_reset_indexes(cbuf);
+        if (cbuf_is_cacheable(cbuf) && cbuf_is_hw_reader(cbuf))
+            arch_clean_invalidate_cache_range((vaddr_t) cbuf->buf, cbuf_size(cbuf));
+    }
     cbuf->is_reset = true;
 }
 

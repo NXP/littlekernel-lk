@@ -119,6 +119,10 @@ static size_t cbuf_write_wo_lock(cbuf_t *cbuf, const char *buf, size_t len, bool
             cbuf->is_reset = false;
         }
 
+        if (cbuf_is_cacheable(cbuf) && cbuf_is_hw_reader(cbuf)) {
+            arch_clean_invalidate_cache_range(
+                                    (vaddr_t) cbuf->buf + cbuf->head, write_len);
+        }
         cbuf->head = INC_POINTER(cbuf, cbuf->head, write_len);
         pos += write_len;
     }

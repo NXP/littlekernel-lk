@@ -172,6 +172,20 @@ size_t cbuf_peek(cbuf_t *cbuf, iovec_t *regions);
 void cbuf_trash(cbuf_t *cbuf, size_t len);
 
 /**
+ * cbuf_skip
+ *
+ * Increment the tail or head pointer for len bytes.
+ *
+ * @param[in] cbuf The cbuf instance to apply the operation.
+ * @param[in] is_write True for increment the head pointer, False for the tail
+ * @param[in] len How many bytes should the pointer be incremented
+ *
+ * @return The number of bytes which were written (or skipped).
+ */
+
+void cbuf_skip(cbuf_t *cbuf, bool is_write, size_t len);
+
+/**
  * cbuf_write
  *
  * Write up to len bytes from the the supplied buffer into the cbuf.

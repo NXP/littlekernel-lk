@@ -259,6 +259,21 @@ void cbuf_trash(cbuf_t *cbuf, size_t len)
     spin_unlock_irqrestore(&cbuf->lock, state);
 }
 
+void cbuf_skip(cbuf_t *cbuf, bool is_write, size_t len)
+{
+    DEBUG_ASSERT(len < valpow2(cbuf->len_pow2));
+
+    spin_lock_saved_state_t state;
+    spin_lock_irqsave(&cbuf->lock, state);
+    if (is_write)
+        cbuf->head = INC_POINTER(cbuf, cbuf->head, len);
+    else
+        cbuf->tail = INC_POINTER(cbuf, cbuf->tail, len);
+
+    spin_unlock_irqrestore(&cbuf->lock, state);
+
+}
+
 size_t cbuf_peek(cbuf_t *cbuf, iovec_t *regions)
 {
     DEBUG_ASSERT(cbuf && regions);

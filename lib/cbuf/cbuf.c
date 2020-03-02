@@ -183,6 +183,10 @@ size_t cbuf_read_wo_lock(cbuf_t *cbuf, char *buf, size_t buflen, bool block)
         while (pos < buflen && cbuf->tail != cbuf->head) {
             size_t read_len = cbuf_get_contiguous_used(cbuf, buflen, pos);
 
+            if (cbuf_is_cacheable(cbuf) && cbuf_is_hw_writer(cbuf)) {
+                arch_invalidate_cache_range(
+                                    (vaddr_t) cbuf->buf + cbuf->tail, read_len);
+            }
             // Only perform the copy if a buf was supplied
             if (NULL != buf) {
                 if (enable)

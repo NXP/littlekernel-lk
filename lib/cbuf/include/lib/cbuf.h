@@ -34,6 +34,7 @@ __BEGIN_CDECLS
 typedef struct cbuf {
     uint head;
     uint tail;
+    uint len;
     uint len_pow2;
     char *buf;
     event_t event;
@@ -232,7 +233,7 @@ size_t cbuf_space_used(cbuf_t *cbuf);
  */
 static inline size_t cbuf_size(cbuf_t *cbuf)
 {
-    return (1UL << cbuf->len_pow2);
+    return cbuf->len;
 }
 
 /**

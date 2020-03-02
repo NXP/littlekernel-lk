@@ -34,41 +34,65 @@
 #define LOCAL_TRACE 0
 
 #define INC_POINTER(cbuf, ptr, inc) \
-    modpow2(((ptr) + (inc)), (cbuf)->len_pow2)
+    (cbuf)->len_pow2 ? \
+        modpow2(((ptr) + (inc)), (cbuf)->len_pow2):\
+            ((ptr) + (inc)) % (cbuf)->len
 
 void cbuf_initialize(cbuf_t *cbuf, size_t len)
 {
     cbuf_initialize_etc(cbuf, len, malloc(len));
 }
 
+static void _cbuf_set_size(cbuf_t *cbuf, size_t len)
+{
+    DEBUG_ASSERT(len > 0);
+
+    if (ispow2(len) == false) {
+        TRACEF("Using circular buffer without a pow2 length degrades the performance\n");
+    }
+    cbuf->len_pow2 = 0;
+    cbuf->len = len;
+    if (ispow2(len))
+        cbuf->len_pow2 = log2_uint(len);
+}
+
 void cbuf_initialize_etc(cbuf_t *cbuf, size_t len, void *buf)
 {
     DEBUG_ASSERT(cbuf);
-    DEBUG_ASSERT(len > 0);
-    DEBUG_ASSERT(ispow2(len));
-
     cbuf->head = 0;
     cbuf->tail = 0;
-    cbuf->len_pow2 = log2_uint(len);
+
+    _cbuf_set_size(cbuf, len);
+
     cbuf->buf = buf;
     cbuf->no_event = false;
     cbuf->is_reset = false;
     cbuf->flags = CBUF_FLAG_DEFAULT;
+
     event_init(&cbuf->event, false, 0);
     spin_lock_init(&cbuf->lock);
 
-    LTRACEF("len %zd, len_pow2 %u\n", len, cbuf->len_pow2);
+    LTRACEF("len %u, len_pow2 %u\n", cbuf->len, cbuf->len_pow2);
 }
 
 size_t cbuf_space_avail(cbuf_t *cbuf)
 {
-    uint consumed = modpow2((uint)(cbuf->head - cbuf->tail), cbuf->len_pow2);
-    return valpow2(cbuf->len_pow2) - consumed - 1;
+    if (cbuf->len_pow2) {
+        uint consumed = modpow2((uint)(cbuf->head - cbuf->tail), cbuf->len_pow2);
+        return valpow2(cbuf->len_pow2) - consumed - 1;
+    } else {
+        uint consumed = (cbuf->head - cbuf->tail) % cbuf->len;
+        return cbuf->len - consumed - 1;
+    }
 }
 
 size_t cbuf_space_used(cbuf_t *cbuf)
 {
-    return modpow2((uint)(cbuf->head - cbuf->tail), cbuf->len_pow2);
+    if (cbuf->len_pow2) {
+        return modpow2((uint)(cbuf->head - cbuf->tail), cbuf->len_pow2);
+    } else {
+        return (cbuf->head - cbuf->tail) % cbuf->len;
+    }
 }
 
 static size_t cbuf_get_contiguous_space(cbuf_t *cbuf, size_t len, size_t pos)
@@ -80,11 +104,11 @@ static size_t cbuf_get_contiguous_space(cbuf_t *cbuf, size_t len, size_t pos)
             // the way to the end of the buffer. Otherwise, head ends up at
             // 0, head == tail, and buffer is considered "empty" again.
             write_len =
-                MIN(valpow2(cbuf->len_pow2) - cbuf->head - 1, len - pos);
+                MIN(cbuf->len - cbuf->head - 1, len - pos);
         } else {
             // Write to the end of the buffer.
             write_len =
-                MIN(valpow2(cbuf->len_pow2) - cbuf->head, len - pos);
+                MIN(cbuf->len - cbuf->head, len - pos);
         }
     } else {
         // Write from head to tail-1.
@@ -140,7 +164,7 @@ size_t cbuf_write(cbuf_t *cbuf, const void *_buf, size_t len, bool canreschedule
     LTRACEF("len %zd\n", len);
 
     DEBUG_ASSERT(cbuf);
-    DEBUG_ASSERT(len < valpow2(cbuf->len_pow2));
+    DEBUG_ASSERT(len < cbuf->len);
 
     size_t pos = 0;
     spin_lock_saved_state_t state;
@@ -165,7 +189,7 @@ static size_t cbuf_get_contiguous_used(cbuf_t *cbuf, size_t buflen, size_t pos)
         read_len = MIN(cbuf->head - cbuf->tail, buflen - pos);
     } else {
         // read to the end of buffer in this pass
-        read_len = MIN(valpow2(cbuf->len_pow2) - cbuf->tail, buflen - pos);
+        read_len = MIN(cbuf->len - cbuf->tail, buflen - pos);
     }
     return read_len;
 }
@@ -248,7 +272,7 @@ void cbuf_trash(cbuf_t *cbuf, size_t len)
     if (cbuf_is_sw_writer(cbuf) && (cbuf_is_sw_reader(cbuf)))
         return;
 
-    DEBUG_ASSERT(len < valpow2(cbuf->len_pow2));
+    DEBUG_ASSERT(len < cbuf->len);
 
     spin_lock_saved_state_t state;
     spin_lock_irqsave(&cbuf->lock, state);
@@ -261,7 +285,7 @@ void cbuf_trash(cbuf_t *cbuf, size_t len)
 
 void cbuf_skip(cbuf_t *cbuf, bool is_write, size_t len)
 {
-    DEBUG_ASSERT(len < valpow2(cbuf->len_pow2));
+    DEBUG_ASSERT(len < cbuf->len);
 
     spin_lock_saved_state_t state;
     spin_lock_irqsave(&cbuf->lock, state);

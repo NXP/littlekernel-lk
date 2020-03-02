@@ -139,6 +139,17 @@ void cbuf_initialize(cbuf_t *cbuf, size_t len);
 void cbuf_initialize_etc(cbuf_t *cbuf, size_t len, void *buf);
 
 /**
+ * cbuf_adjust_size
+ *
+ * Adjust the size of the circular buffer already initialized
+ *
+ * @param[in] cbuf A pointer to the cbuf structure to allocate.
+ * @param[in] len The new size of the buffer, in bytes. Must be less than
+ * initial buffer size.
+ */
+void cbuf_adjust_size(cbuf_t *cbuf, size_t len);
+
+/**
  * cbuf_read
  *
  * Read up to buflen bytes in to the supplied buffer.

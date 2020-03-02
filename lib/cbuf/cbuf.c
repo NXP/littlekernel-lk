@@ -75,6 +75,20 @@ void cbuf_initialize_etc(cbuf_t *cbuf, size_t len, void *buf)
     LTRACEF("len %u, len_pow2 %u\n", cbuf->len, cbuf->len_pow2);
 }
 
+void cbuf_adjust_size(cbuf_t *cbuf, size_t len)
+{
+    DEBUG_ASSERT(cbuf->len >= len);
+
+    spin_lock_saved_state_t state;
+    spin_lock_irqsave(&cbuf->lock, state);
+
+    cbuf->head = 0;
+    cbuf->tail = 0;
+    _cbuf_set_size(cbuf, len);
+
+    spin_unlock_irqrestore(&cbuf->lock, state);
+}
+
 size_t cbuf_space_avail(cbuf_t *cbuf)
 {
     if (cbuf->len_pow2) {

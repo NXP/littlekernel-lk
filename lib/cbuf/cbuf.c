@@ -61,6 +61,7 @@ void cbuf_initialize_etc(cbuf_t *cbuf, size_t len, void *buf)
     DEBUG_ASSERT(cbuf);
     cbuf->head = 0;
     cbuf->tail = 0;
+    cbuf->len_max = len;
 
     _cbuf_set_size(cbuf, len);
 
@@ -77,7 +78,7 @@ void cbuf_initialize_etc(cbuf_t *cbuf, size_t len, void *buf)
 
 void cbuf_adjust_size(cbuf_t *cbuf, size_t len)
 {
-    DEBUG_ASSERT(cbuf->len >= len);
+    DEBUG_ASSERT(cbuf->len_max >= len);
 
     spin_lock_saved_state_t state;
     spin_lock_irqsave(&cbuf->lock, state);

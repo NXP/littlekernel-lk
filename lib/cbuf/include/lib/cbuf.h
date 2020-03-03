@@ -34,6 +34,7 @@ __BEGIN_CDECLS
 typedef struct cbuf {
     uint head;
     uint tail;
+    uint len_max;
     uint len;
     uint len_pow2;
     char *buf;

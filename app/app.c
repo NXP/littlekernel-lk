@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2009 Travis Geiselbrecht
+ * Copyright 2019-2020 NXP
  *
  * Permission is hereby granted, free of charge, to any person obtaining
  * a copy of this software and associated documentation files
@@ -22,6 +23,7 @@
  */
 #include <stdio.h>
 #include <app.h>
+#include <assert.h>
 #include <kernel/thread.h>
 
 extern const struct app_descriptor __apps_start;
@@ -63,6 +65,7 @@ static void start_app(const struct app_descriptor *app)
 
     printf("starting app %s\n", app->name);
     thread_t *t = thread_create(app->name, &app_thread_entry, (void *)app, DEFAULT_PRIORITY, stack_size);
+    DEBUG_ASSERT(t);
     thread_detach(t);
     thread_resume(t);
 }

@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2008-2015 Travis Geiselbrecht
- * Copyright 2018 NXP
+ * Copyright 2018-2020 NXP
  *
  * Permission is hereby granted, free of charge, to any person obtaining
  * a copy of this software and associated documentation files
@@ -162,7 +162,7 @@ static void __kernel_stdout_write_buffered(const char* str, size_t len)
     }
 
     // look for corruption and don't continue
-    if (unlikely(!is_kernel_address((uintptr_t)buf) || pos >= THREAD_LINEBUFFER_LENGTH)) {
+    if (unlikely(!is_kernel_address((uintptr_t)buf)) || (pos >= (THREAD_LINEBUFFER_LENGTH - 1))) {
         const char* str = "<linebuffer corruption>\n";
         __kernel_stdout_write(str, strlen(str));
         return;

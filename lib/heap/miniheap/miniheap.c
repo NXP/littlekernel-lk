@@ -1,4 +1,5 @@
 /*
+ * Copyright 2020 NXP
  * Copyright (c) 2008-2009,2012-2015 Travis Geiselbrecht
  * Copyright (c) 2009 Corey Tabaka
  *
@@ -46,6 +47,10 @@
 // whether or not the heap will try to trim itself every time a free happens
 #ifndef MINIHEAP_AUTOTRIM
 #define MINIHEAP_AUTOTRIM 0
+#endif
+
+#ifndef MINIHEAP_RETRY_ALLOC_ONCE
+#define MINIHEAP_RETRY_ALLOC_ONCE 0
 #endif
 
 #define HEAP_MAGIC (0x48454150)  // 'HEAP'
@@ -296,7 +301,9 @@ retry:
     if (ptr == NULL && retry_count == 0) {
         ssize_t err = heap_grow(size);
         if (err >= 0) {
+#if MINIHEAP_RETRY_ALLOC_ONCE
             retry_count++;
+#endif
             goto retry;
         }
     }

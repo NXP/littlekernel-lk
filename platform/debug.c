@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2008-2015 Travis Geiselbrecht
+ * Copyright 2019-2020 NXP
  *
  * Permission is hereby granted, free of charge, to any person obtaining
  * a copy of this software and associated documentation files
@@ -59,4 +60,9 @@ __WEAK void platform_dputs_thread(const char* str, size_t len)
 __WEAK void platform_dputs_irq(const char* str, size_t len)
 {
     platform_dputs(str, len);
+}
+
+__WEAK bool platform_is_console_enabled(void)
+{
+    return true;
 }

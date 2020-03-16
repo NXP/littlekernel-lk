@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2008 Travis Geiselbrecht
+ * Copyright 2019-2020 NXP
  *
  * Permission is hereby granted, free of charge, to any person obtaining
  * a copy of this software and associated documentation files
@@ -35,6 +36,7 @@ void platform_dputs(const char* str, size_t len);
 void platform_dputs_thread(const char* str, size_t len);
 void platform_dputs_irq(const char* str, size_t len);
 int platform_dgetc(char *c, bool wait);
+bool platform_is_console_enabled(void);
 
 // Should be available even if the system has panicked.
 void platform_pputc(char c);

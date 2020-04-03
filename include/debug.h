@@ -37,6 +37,16 @@
 #define INFO 1
 #define SPEW 2
 
+#define LK_EMERG      0
+#define LK_ALERT      1
+#define LK_CRIT       2
+#define LK_ERR        3
+#define LK_WARNING    4
+#define LK_NOTICE     5
+#define LK_INFO       6
+#define LK_DEBUG      7
+#define LK_VERBOSE    8
+
 __BEGIN_CDECLS
 
 #if !DISABLE_DEBUG_OUTPUT
@@ -65,6 +75,14 @@ static inline void hexdump8(const void *ptr, size_t len)
 }
 
 #define dprintf(level, x...) do { if ((level) <= LK_DEBUGLEVEL) { printf(x); } } while (0)
+
+/* Define log level, if not already defined */
+#if !defined(AF_LK_LOGLEVEL)
+#define AF_LK_LOGLEVEL LK_NOTICE
+#endif
+
+/* Print macro */
+#define printlk(level, x...) do { if ((level) <= AF_LK_LOGLEVEL) { printf(x); } } while (0)
 
 /* systemwide halts */
 void _panic(void *caller, const char *fmt, ...) __PRINTFLIKE(2, 3) __NO_RETURN;

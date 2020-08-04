@@ -32,6 +32,13 @@ MODULE_SRCS += \
 	$(LOCAL_DIR)/pure_virtual.cpp
 endif
 
+ifeq ($(ARCH),arm64)
+MODULE_SRCS += \
+	$(LOCAL_DIR)/aarch64/setjmp.S
+
+GLOBAL_INCLUDES += $(LOCAL_DIR)/aarch64/include
+endif
+
 include $(LOCAL_DIR)/string/rules.mk
 
 include make/module.mk

@@ -14,6 +14,7 @@ MODULE_SRCS += \
     $(LOCAL_DIR)/mem_tests.c \
     $(LOCAL_DIR)/printf_tests.c \
     $(LOCAL_DIR)/tests.c \
+    $(LOCAL_DIR)/libc.c \
     $(LOCAL_DIR)/thread_tests.c \
     $(LOCAL_DIR)/port_tests.c \
 

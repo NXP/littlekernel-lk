@@ -31,6 +31,7 @@
 #include <kernel/thread.h>
 #include <kernel/mutex.h>
 #include <lib/console.h>
+#include <getopt.h>
 #if WITH_LIB_ENV
 #include <lib/env.h>
 #endif
@@ -696,6 +697,8 @@ static status_t command_loop(int (*get_line)(const char **, void *), void *get_l
             mutex_acquire(command_lock);
 
         abort_script = false;
+        optreset = 1;
+        optind = 1;
         lastresult = command->cmd_callback(argc, args);
 
 #if WITH_LIB_ENV

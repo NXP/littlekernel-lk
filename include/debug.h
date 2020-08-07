@@ -82,7 +82,13 @@ static inline void hexdump8(const void *ptr, size_t len)
 #endif
 
 /* Print macro */
+#if defined(WITH_KERNEL_DYNDBG)
+#include <dyndbg.h>
+#define printlk(level, x, ...) \
+dyndbg_print(level, x, ##__VA_ARGS__)
+#else
 #define printlk(level, x...) do { if ((level) <= AF_LK_LOGLEVEL) { printf(x); } } while (0)
+#endif
 
 /* systemwide halts */
 void _panic(void *caller, const char *fmt, ...) __PRINTFLIKE(2, 3) __NO_RETURN;

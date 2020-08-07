@@ -26,4 +26,8 @@ else
 MODULE_DEPS += kernel/novm
 endif
 
+ifeq ($(WITH_DYNAMIC_DEBUG),1)
+MODULE_DEPS += kernel/dyndbg
+endif
+
 include make/module.mk

@@ -24,6 +24,7 @@ MODULE_SRCS += \
 	$(LOCAL_DIR)/abs.c \
 	$(LOCAL_DIR)/labs.c \
 	$(LOCAL_DIR)/llabs.c \
+	$(LOCAL_DIR)/getopt.c \
 	$(LOCAL_DIR)/eabi.c
 
 ifeq ($(WITH_CPP_SUPPORT),true)

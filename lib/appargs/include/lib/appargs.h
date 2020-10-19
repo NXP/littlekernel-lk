@@ -225,6 +225,7 @@ struct device_cfg_dplls *of_device_get_plls(struct device *);
 void of_get_console_irq_and_base(vaddr_t *, unsigned *);
 int of_get_mempaddr(paddr_t *);
 int of_get_meminfo(size_t *);
+int of_get_memprop(const char *prop_name, uint32_t *array, size_t len);
 int of_get_pci_cfg(uintptr_t *);
 int of_get_node_by_path(const char *);
 int of_get_int_array(int, const char *, uint32_t *, int);

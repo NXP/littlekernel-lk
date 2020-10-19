@@ -1254,10 +1254,9 @@ struct device * of_get_device_by_class_and_id(const char *name, int bus_id)
     return NULL;
 }
 
-int of_get_mempaddr(paddr_t *mempaddr)
+int of_get_memprop(const char *prop_name, uint32_t *array, size_t len)
 {
     int offset, err;
-    uint32_t paddr;
 
     if (!main_fdt_base)
         return -FDT_ERR_NOTFOUND;
@@ -1267,33 +1266,31 @@ int of_get_mempaddr(paddr_t *mempaddr)
         return -FDT_ERR_NOTFOUND;
 
     err = fdt_get_int_array(main_fdt_base, offset,
-                            "phys_start", &paddr, 1);
+                            prop_name, array, len);
     if (err != 1)
         return -FDT_ERR_NOTFOUND;
 
-    *mempaddr = (paddr_t)paddr;
     return 0;
+}
+
+int of_get_mempaddr(paddr_t *mempaddr)
+{
+    uint32_t val;
+    int ret;
+
+    ret = of_get_memprop("phys_start", &val, 1);
+    *mempaddr = (paddr_t)val;
+    return ret;
 }
 
 int of_get_meminfo(size_t *memsize)
 {
-    int offset, err;
-    uint32_t size;
+    uint32_t val;
+    int ret;
 
-    if (!main_fdt_base)
-        return -FDT_ERR_NOTFOUND;
-
-    offset = fdt_path_offset(main_fdt_base, "/meminfo");
-    if (offset < 0)
-        return -FDT_ERR_NOTFOUND;
-
-    err = fdt_get_int_array(main_fdt_base, offset,
-                            "size", &size, 1);
-    if (err != 1)
-        return -FDT_ERR_NOTFOUND;
-
-    *memsize = (size_t)size;
-    return 0;
+    ret = of_get_memprop("size", &val, 1);
+    *memsize = (size_t)val;
+    return ret;
 }
 
 int of_get_pci_cfg(uintptr_t *cfg)

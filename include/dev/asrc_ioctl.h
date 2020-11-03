@@ -1,7 +1,7 @@
 /*-
  * SPDX-License-Identifier: BSD-3-Clause
  *
- * Copyright 2019-2020 NXP
+ * Copyright 2020 NXP
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -26,23 +26,17 @@
  * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
- *
  */
 
-#ifndef	_DEV_IOCTL_H_
-#define	_DEV_IOCTL_H_
+#ifndef	_ASRC_IOCTL_H_
+#define	_ASRC_IOCTL_H_
+#include <dev/dev_ioctl.h>
+#include <sys/ioctl.h>
 
-#define IOCTL_LK    0xC0
-#define IOCTL_LK_DEV(x) (IOCTL_LK | (~(IOCTL_LK) & x))
+struct asrc_ioc_cmd_ratio {
+    float dynamic;
+};
+#define ASRC_IOC_DYNAMIC_RATIO_GET  _IOR(IOCTL_DEV_ASRC, 0, struct asrc_ioc_cmd_ratio)
+#define ASRC_IOC_DYNAMIC_RATIO_SET  _IOW(IOCTL_DEV_ASRC, 1, struct asrc_ioc_cmd_ratio)
 
-/* Little Kernel major number */
-#define IOCTL_DEV_UART      IOCTL_LK_DEV(1)
-#define IOCTL_DEV_I2C       IOCTL_LK_DEV(2)
-#define IOCTL_DEV_SAI       IOCTL_LK_DEV(3)
-#define IOCTL_DEV_SPDIF     IOCTL_LK_DEV(4)
-#define IOCTL_DEV_SPI       IOCTL_LK_DEV(5)
-#define IOCTL_DEV_GPR       IOCTL_LK_DEV(6)
-#define IOCTL_DEV_PDM       IOCTL_LK_DEV(7)
-#define IOCTL_DEV_ASRC      IOCTL_LK_DEV(8)
-
-#endif /* DEV_IOCTL_H_ */
+#endif /* _ASRC_IOCTL_H_ */

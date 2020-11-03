@@ -1,7 +1,7 @@
 /*-
  * SPDX-License-Identifier: BSD-3-Clause
  *
- * Copyright 2019 NXP
+ * Copyright 2019-2020 NXP
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -42,5 +42,6 @@
 #define IOCTL_DEV_SPDIF     IOCTL_LK_DEV(4)
 #define IOCTL_DEV_SPI       IOCTL_LK_DEV(5)
 #define IOCTL_DEV_GPR       IOCTL_LK_DEV(6)
+#define IOCTL_DEV_PDM       IOCTL_LK_DEV(7)
 
 #endif /* DEV_IOCTL_H_ */

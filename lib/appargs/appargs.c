@@ -1351,6 +1351,14 @@ bool of_get_bool(int node, const char *prop_name)
     return !!fdtdec_get_bool(main_fdt_base, node, prop_name);
 }
 
+int of_get_strings(int node, const char *prop_name, const char **name, int count)
+{
+    if (!main_fdt_base)
+        return -FDT_ERR_NOTFOUND;
+
+    return fdtdec_get_string_list(main_fdt_base, node, prop_name, name, count);
+}
+
 static int appargs_check_fdt(const void *fdt)
 {
     int err = fdt_check_header(fdt);

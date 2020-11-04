@@ -228,7 +228,8 @@ int of_get_meminfo(size_t *);
 int of_get_pci_cfg(uintptr_t *);
 int of_get_node_by_path(const char *);
 int of_get_int_array(int, const char *, uint32_t *, int);
-bool of_get_bool(int node, const char *);
+bool of_get_bool(int, const char *);
+int of_get_strings(int, const char *, const char **, int);
 
 int appargs_parse_fdt(const void *);
 

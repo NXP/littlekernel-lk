@@ -15,6 +15,7 @@ __BEGIN_CDECLS
 struct int_handler_struct {
     int_handler handler;
     void *arg;
+    void *next;
 };
 
 struct int_handler_struct *pdev_get_int_handler(unsigned int vector);

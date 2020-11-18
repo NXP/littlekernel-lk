@@ -10,10 +10,14 @@
 #include <sys/types.h>
 
 #define ARM_MAX_INT 1024
+#define PDEV_MAX_CHAINED_INT 256
 
 static spin_lock_t lock = SPIN_LOCK_INITIAL_VALUE;
 
-static struct int_handler_struct int_handler_table[ARM_MAX_INT];
+static struct int_handler_struct int_handler_table[ARM_MAX_INT
+        + PDEV_MAX_CHAINED_INT];
+
+static struct int_handler_struct *pdev_get_free_chained_int_handler(void);
 
 struct int_handler_struct *pdev_get_int_handler(unsigned int vector)
 {
@@ -34,14 +38,34 @@ status_t register_int_handler(unsigned int vector, int_handler handler, void *ar
 
     h = pdev_get_int_handler(vector);
     if (handler && h->handler) {
-        spin_unlock_restore(&lock, state, SPIN_LOCK_FLAG_INTERRUPTS);
-        return ERR_ALREADY_BOUND;
+        /* Get to last chained handler, if any */
+        while (h->next)
+            h = (struct int_handler_struct*) h->next;
+
+        /* Allocate spare chained interrupt handler from pool */
+        h->next = (void *) pdev_get_free_chained_int_handler();
+        if (!h->next) {
+            spin_unlock_restore(&lock, state, SPIN_LOCK_FLAG_INTERRUPTS);
+            return ERR_ALREADY_BOUND;
+        }
+
+        h = (struct int_handler_struct *) h->next;
     }
     h->handler = handler;
     h->arg = arg;
 
     spin_unlock_restore(&lock, state, SPIN_LOCK_FLAG_INTERRUPTS);
     return NO_ERROR;
+}
+
+static struct int_handler_struct *pdev_get_free_chained_int_handler(void)
+{
+    for (unsigned i = 0; i < PDEV_MAX_CHAINED_INT; i++) {
+        if (int_handler_table[ARM_MAX_INT + i].handler == NULL)
+            return &int_handler_table[ARM_MAX_INT + i];
+    }
+
+    return NULL;
 }
 
 static status_t default_mask(unsigned int vector)

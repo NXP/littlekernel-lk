@@ -366,8 +366,13 @@ static enum handler_return gic_handle_irq(iframe *frame)
 
     // deliver the interrupt
     struct int_handler_struct *handler = pdev_get_int_handler(vector);
-    if (handler->handler) {
-        ret = handler->handler(handler->arg);
+    while (handler) {
+        if (handler->handler) {
+            enum handler_return reschedule = handler->handler(handler->arg);
+            if (reschedule == INT_RESCHEDULE)
+                ret = INT_RESCHEDULE;
+        }
+        handler = (struct int_handler_struct*) handler->next;
     }
 
     gic_write_eoir(vector);

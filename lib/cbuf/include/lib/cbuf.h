@@ -182,6 +182,29 @@ size_t cbuf_read(cbuf_t *cbuf, void *buf, size_t buflen, bool block);
  */
 size_t cbuf_peek(cbuf_t *cbuf, iovec_t *regions);
 
+/**
+ * cbuf_rewind
+ *
+ * Remove all latest written bytes by moving head pointer to tail.
+ *
+ * @param[in] cbuf The cbuf instance to apply the operation.
+ *
+ * @return The number of removed bytes.
+ */
+size_t cbuf_rewind(cbuf_t *cbuf);
+
+/**
+ * cbuf_rewind_len
+ *
+ * iRemove latest written bytes by decrementing the head pointer.
+ *
+ * @param[in] cbuf The cbuf instance to apply the operation.
+ * @param[in] len How many bytes should the pointer be decremented.
+ *
+ * @return The number of removed bytes.
+ */
+size_t cbuf_rewind_len(cbuf_t *cbuf, size_t len);
+
 void cbuf_trash(cbuf_t *cbuf, size_t len);
 
 /**

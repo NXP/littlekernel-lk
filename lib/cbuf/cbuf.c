@@ -38,6 +38,11 @@
         modpow2(((ptr) + (inc)), (cbuf)->len_pow2):\
             ((ptr) + (inc)) % (cbuf)->len
 
+#define DEC_POINTER(cbuf, ptr, inc) \
+    (cbuf)->len_pow2 ? \
+        modpow2(((ptr) - (inc)), (cbuf)->len_pow2):\
+            ((ptr) - (inc)) % (cbuf)->len
+
 void cbuf_initialize(cbuf_t *cbuf, size_t len)
 {
     cbuf_initialize_etc(cbuf, len, malloc(len));
@@ -310,7 +315,38 @@ void cbuf_skip(cbuf_t *cbuf, bool is_write, size_t len)
         cbuf->tail = INC_POINTER(cbuf, cbuf->tail, len);
 
     spin_unlock_irqrestore(&cbuf->lock, state);
+}
 
+size_t cbuf_rewind(cbuf_t *cbuf)
+{
+    spin_lock_saved_state_t state;
+    spin_lock_irqsave(&cbuf->lock, state);
+
+    size_t len = cbuf_space_used(cbuf);
+
+    cbuf->head = cbuf->tail;
+
+    spin_unlock_irqrestore(&cbuf->lock, state);
+
+    return len;
+}
+
+size_t cbuf_rewind_len(cbuf_t *cbuf, size_t len)
+{
+    DEBUG_ASSERT(len < cbuf->len);
+
+    spin_lock_saved_state_t state;
+    spin_lock_irqsave(&cbuf->lock, state);
+
+    size_t max = cbuf_space_used(cbuf);
+    if (len > max)
+        len = max;
+
+    cbuf->head = DEC_POINTER(cbuf, cbuf->head, len);
+
+    spin_unlock_irqrestore(&cbuf->lock, state);
+
+    return len;
 }
 
 size_t cbuf_peek(cbuf_t *cbuf, iovec_t *regions)

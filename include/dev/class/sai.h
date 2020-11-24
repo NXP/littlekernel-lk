@@ -107,6 +107,7 @@ struct sai_ops {
     status_t (*tx_start)(struct device *dev);
     status_t (*tx_stop)(struct device *dev);
     status_t (*tx_flush)(struct device *dev);
+    status_t (*tx_drop)(struct device *dev);
     status_t (*tx_setup)(struct device *dev, sai_format_t *pfmt);
     status_t (*tx_get_cnt)(struct device *dev, uint32_t *bitc, uint32_t *bitc_ts, uint64_t *cpu_ts);
     status_t (*tx_en_cnt)(struct device *dev, bool en);
@@ -118,6 +119,7 @@ struct sai_ops {
     status_t (*rx_start)(struct device *dev);
     status_t (*rx_stop)(struct device *dev);
     status_t (*rx_flush)(struct device *dev);
+    status_t (*rx_drop)(struct device *dev);
     status_t (*rx_setup)(struct device *dev, sai_format_t *pfmt);
     status_t (*rx_get_cnt)(struct device *dev, uint32_t *bitc, uint32_t *bitc_ts, uint64_t *cpu_ts);
     status_t (*rx_en_cnt)(struct device *dev, bool en);
@@ -132,6 +134,7 @@ status_t class_sai_close(struct device *dev, bool is_read);
 status_t class_sai_start(struct device *dev, bool is_read);
 status_t class_sai_stop(struct device *dev, bool is_read);
 status_t class_sai_flush(struct device *dev, bool is_read);
+status_t class_sai_drop(struct device *dev, bool is_read);
 status_t class_sai_setup(struct device *dev, bool is_read, sai_format_t *pfmt);
 status_t class_sai_write(struct device *dev, const void *buf, size_t len);
 status_t class_sai_read(struct device *dev, void *buf, size_t len);

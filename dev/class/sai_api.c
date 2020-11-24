@@ -49,6 +49,7 @@ SAI_CLASS_CONS(close)
 SAI_CLASS_CONS(start)
 SAI_CLASS_CONS(stop)
 SAI_CLASS_CONS(flush)
+SAI_CLASS_CONS(drop)
 
 status_t class_sai_setup(struct device *dev, bool is_read, sai_format_t *pfmt)
 {

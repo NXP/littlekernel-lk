@@ -62,7 +62,6 @@ STATIC_COMMAND_MASKED("fw", "fill range of memory by word", &cmd_fill_mem, CMD_A
 STATIC_COMMAND_MASKED("fh", "fill range of memory by halfword", &cmd_fill_mem, CMD_AVAIL_ALWAYS)
 STATIC_COMMAND_MASKED("fb", "fill range of memory by byte", &cmd_fill_mem, CMD_AVAIL_ALWAYS)
 STATIC_COMMAND_MASKED("mc", "copy a range of memory", &cmd_copy_mem, CMD_AVAIL_ALWAYS)
-STATIC_COMMAND("crash", "intentionally crash", &cmd_crash)
 STATIC_COMMAND("stackstomp", "intentionally overrun the stack", &cmd_stackstomp)
 #endif
 #if LK_DEBUGLEVEL > 1
@@ -71,6 +70,7 @@ STATIC_COMMAND("mtest", "simple memory test", &cmd_memtest)
 STATIC_COMMAND("chain", "chain load another binary", &cmd_chain)
 STATIC_COMMAND("sleep", "sleep number of seconds", &cmd_sleep)
 STATIC_COMMAND("sleepm", "sleep number of milliseconds", &cmd_sleep)
+STATIC_COMMAND("crash", "intentionally crash", &cmd_crash)
 STATIC_COMMAND_END(mem);
 
 static int cmd_display_mem(int argc, const cmd_args *argv)

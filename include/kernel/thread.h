@@ -40,9 +40,11 @@ typedef struct vmm_aspace vmm_aspace_t;
 
 __BEGIN_CDECLS;
 
+/* thread stats for all build */
+#define THREAD_STATS 1
+
 /* debug-enable runtime checks */
 #if LK_DEBUGLEVEL > 1
-#define THREAD_STATS 1
 #define THREAD_STACK_HIGHWATER 1
 #define THREAD_STACK_BOUNDS_CHECK 1
 #ifndef THREAD_STACK_PADDING_SIZE

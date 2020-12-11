@@ -85,6 +85,12 @@ struct alloc_struct_begin {
 #endif
 };
 
+#if LK_DEBUGLEVEL == 0
+    /* XXX: release build, keep heap info output */
+    #undef dprintf
+    #define dprintf(level,...) printf(__VA_ARGS__)
+#endif
+
 static ssize_t heap_grow(size_t len);
 
 static void dump_free_chunk(struct free_heap_chunk *chunk)

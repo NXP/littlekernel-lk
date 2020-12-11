@@ -36,7 +36,7 @@
 #define LOCAL_TRACE 0
 
 /* heap tracing */
-#if LK_DEBUGLEVEL > 0
+#if LK_DEBUGLEVEL >= 0
 static bool heap_trace = false;
 #else
 #define heap_trace (false)
@@ -325,8 +325,7 @@ static void heap_test(void)
 #endif
 }
 
-
-#if LK_DEBUGLEVEL > 1
+#if LK_DEBUGLEVEL >= 0
 #if WITH_LIB_CONSOLE
 
 #include <lib/console.h>

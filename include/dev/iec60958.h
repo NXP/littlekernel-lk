@@ -1,5 +1,5 @@
 /*
- * Copyright 2019-2020 NXP
+ * Copyright 2019-2021 NXP
  *
  * Permission is hereby granted, free of charge, to any person obtaining
  * a copy of this software and associated documentation files
@@ -104,7 +104,12 @@ typedef union iec60958_channel_status_u {
 } iec60958_channel_status_t;
 
 /*
- *  HDMI c2.1 Table 9.23
+ * HDMI c2.1 Table 9.23
+ * Channel Status audio type definitions bits 0,1,3,4 and 5
+ * Non-eARC use cases can only be subset below:
+ * - UNENCRYPTED_2CH_LPCM
+ * - UNENCRYPTED_COMPRESSED
+ * Other values are specific to eARC use cases
  */
 typedef enum _iec60958_audio_format {
     UNENCRYPTED_2CH_LPCM = 0,
@@ -122,6 +127,12 @@ static inline iec60958_audio_format_t iec60958_get_audio_format(iec60958_channel
     return ((cs->raw[0] & 0x3) | ((cs->raw[0] & 0x38) >> 1));
 }
 
+/*
+ * HDMI c2.1 Table 9.25
+ * Channel Status Multi-channel audio layout bits 44, 45, 46, 47
+ * Those definitions are applicable only to Multi-Channel L-PCM
+ * audio types in eARC use cases.
+ */
 typedef enum _iec60958_nch_lpcm {
     nCH_LPCM_2CH = 0,
     nCH_LPCM_8CH = 7,
@@ -342,42 +353,24 @@ static int iec60958_get_rate(iec60958_channel_status_t *cs)
 
     switch (iec60958_get_audio_format(cs)) {
     case UNENCRYPTED_2CH_LPCM:
+        /* HDMI or eARC 2chans - nothing to do */
+        break;
     case UNENCRYPTED_nCH_LPCM:
     case ENCRYPTED_nCH_LPCM:
+        /* eARC multichannel - amend rate per channel layout */
         switch (cs->cs.audio_sampling_coefficient) {
-        case AUDIO_SAMPLE_RATE_RATIO_DIV_32:
-            rate *= 32;
+        case nCH_LPCM_2CH:
+            /* nothing to do */
             break;
-        case AUDIO_SAMPLE_RATE_RATIO_DIV_16:
-            rate *= 16;
-            break;
-        case AUDIO_SAMPLE_RATE_RATIO_DIV_8:
-            rate *= 8;
-            break;
-        case AUDIO_SAMPLE_RATE_RATIO_DIV_4:
-            rate *= 4;
-            break;
-        case AUDIO_SAMPLE_RATE_RATIO_DIV_2:
-            rate *= 2;
-            break;
-        case AUDIO_SAMPLE_RATE_RATIO_MULT_32:
-            rate /= 32;
-            break;
-        case AUDIO_SAMPLE_RATE_RATIO_MULT_16:
-            rate /= 16;
-            break;
-        case AUDIO_SAMPLE_RATE_RATIO_MULT_8:
-            rate /= 8;
-            break;
-        case AUDIO_SAMPLE_RATE_RATIO_MULT_4:
+        case nCH_LPCM_8CH:
             rate /= 4;
             break;
-        case AUDIO_SAMPLE_RATE_RATIO_MULT_2:
-            rate /= 2;
+        case nCH_LPCM_16CH:
+            rate /= 8;
             break;
-
-        case AUDIO_SAMPLE_RATE_RATIO_NO_IND:
-        case AUDIO_SAMPLE_RATE_RATIO_EQUAL:
+        case nCH_LPCM_32CH:
+            rate /= 16;
+            break;
         default:
             break;
         }

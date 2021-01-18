@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2008-2015 Travis Geiselbrecht
- * Copyright 2020 NXP
+ * Copyright 2020-2021 NXP
  *
  * Permission is hereby granted, free of charge, to any person obtaining
  * a copy of this software and associated documentation files
@@ -187,13 +187,40 @@ size_t cbuf_write(cbuf_t *cbuf, const void *_buf, size_t len, bool canreschedule
     DEBUG_ASSERT(len < cbuf->len);
 
     size_t pos = 0;
-    spin_lock_saved_state_t state;
-    spin_lock_irqsave(&cbuf->lock, state);
 
-    pos = cbuf_write_wo_lock(cbuf, buf, len, canreschedule);
+    if (!cbuf_writer_use_max_chunk(cbuf) || !buf) {
+        spin_lock_saved_state_t state;
+        spin_lock_irqsave(&cbuf->lock, state);
 
-    spin_unlock_irqrestore(&cbuf->lock, state);
+        pos = cbuf_write_wo_lock(cbuf, buf, len, canreschedule);
 
+        spin_unlock_irqrestore(&cbuf->lock, state);
+        goto out;
+    }
+
+    size_t remaining = len;
+    int loop = len / CBUF_WRITE_MAX_CHUNK;
+    loop += (len % CBUF_WRITE_MAX_CHUNK != 0);
+
+    while (loop--) {
+        spin_lock_saved_state_t state;
+        spin_lock_irqsave(&cbuf->lock, state);
+
+        size_t written = cbuf_write_wo_lock(
+            cbuf, buf,
+            (remaining > CBUF_WRITE_MAX_CHUNK) ? CBUF_WRITE_MAX_CHUNK : remaining,
+            canreschedule);
+        spin_unlock_irqrestore(&cbuf->lock, state);
+
+        if (written == 0)
+            goto out;
+
+        pos += written;
+        remaining -= written;
+        buf += written;
+    }
+
+out:
     // XXX convert to only rescheduling if
     if (canreschedule)
         thread_preempt();
@@ -266,13 +293,39 @@ retry:
     if (!cbuf->no_event && block)
         event_wait(&cbuf->event);
 
-    spin_lock_saved_state_t state;
-    spin_lock_irqsave(&cbuf->lock, state);
+    if (!cbuf_reader_use_max_chunk(cbuf) || !buf) {
+        spin_lock_saved_state_t state;
+        spin_lock_irqsave(&cbuf->lock, state);
 
-    ret = cbuf_read_wo_lock(cbuf, buf, buflen, block);
+        ret = cbuf_read_wo_lock(cbuf, buf, buflen, block);
 
-    spin_unlock_irqrestore(&cbuf->lock, state);
+        spin_unlock_irqrestore(&cbuf->lock, state);
+        goto out;
+    }
 
+    size_t remaining = buflen;
+    int loop = buflen / CBUF_READ_MAX_CHUNK;
+    loop += (buflen % CBUF_READ_MAX_CHUNK != 0);
+
+    while (loop--) {
+        spin_lock_saved_state_t state;
+        spin_lock_irqsave(&cbuf->lock, state);
+
+        size_t read = cbuf_read_wo_lock(
+            cbuf, buf,
+            (remaining > CBUF_READ_MAX_CHUNK) ? CBUF_READ_MAX_CHUNK : remaining,
+            block);
+        spin_unlock_irqrestore(&cbuf->lock, state);
+
+        if (read == 0)
+            goto out;
+
+        ret += read;
+        remaining -= read;
+        buf += read;
+    }
+
+out:
     // we apparently blocked but raced with another thread and found no data, retry
     if (block && ret == 0)
         goto retry;

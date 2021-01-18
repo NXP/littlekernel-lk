@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2009-2013 Travis Geiselbrecht
- * Copyright 2020 NXP
+ * Copyright 2020-2021 NXP
  *
  * Permission is hereby granted, free of charge, to any person obtaining
  * a copy of this software and associated documentation files
@@ -50,10 +50,27 @@ typedef struct cbuf {
 #define CBUF_FLAG_SW_IS_WRITER      (1 << 2)
 #define CBUF_FLAG_SW_IS_READER      (1 << 3)
 #define CBUF_FLAG_BUF_IS_CACHEABLE  (1 << 4)
+#define CBUF_FLAG_USE_MAX_CHUNK_R   (1 << 5)
+#define CBUF_FLAG_USE_MAX_CHUNK_W   (1 << 6)
+#define CBUF_FLAG_USE_MAX_CHUNK_RW  \
+    (CBUF_FLAG_USE_MAX_CHUNK_R | CBUF_FLAG_USE_MAX_CHUNK_W)
+
+#define CBUF_READ_MAX_CHUNK         (16 << 10)
+#define CBUF_WRITE_MAX_CHUNK        (16 << 10)
 
 #define CBUF_FLAG_DEFAULT ( CBUF_FLAG_SW_IS_WRITER \
                             | CBUF_FLAG_SW_IS_READER \
                             | CBUF_FLAG_BUF_IS_CACHEABLE )
+
+static inline bool cbuf_reader_use_max_chunk(cbuf_t *cbuf)
+{
+    return !!(cbuf->flags & CBUF_FLAG_USE_MAX_CHUNK_R);
+}
+
+static inline bool cbuf_writer_use_max_chunk(cbuf_t *cbuf)
+{
+    return !!(cbuf->flags & CBUF_FLAG_USE_MAX_CHUNK_W);
+}
 
 static inline bool cbuf_is_no_event(cbuf_t *cbuf)
 {

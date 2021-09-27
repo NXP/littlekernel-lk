@@ -61,6 +61,8 @@ size_t strlcat(char *, char const *, size_t);
 size_t strlcpy(char *, char const *, size_t);
 int    strncasecmp(char const *, char const *, size_t)  __PURE;
 int    strnicmp(char const *, char const *, size_t) __PURE;
+int    strcasecmp(char const *, char const *);
+int    stricmp(char const *, char const *);
 size_t strnlen(char const *s, size_t count) __PURE;
 
 __END_CDECLS
